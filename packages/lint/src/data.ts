@@ -14,15 +14,10 @@
  */
 
 import type { Config, File, ScopedValues } from "@vale-ts/core";
-import {
-	newE100,
-	newE201FromTarget,
-	tryParseLenient,
-	View,
-} from "@vale-ts/core";
+import { newE100, newE201FromTarget, tryParseLenient, View } from "@vale-ts/core";
+import { hasLanguage } from "./code/index.ts";
 import type { CodeHost } from "./code.ts";
 import { lintCode } from "./code.ts";
-import { hasLanguage } from "./code/index.ts";
 
 /** What a data reader needs from the linter. */
 export interface DataHost extends CodeHost {

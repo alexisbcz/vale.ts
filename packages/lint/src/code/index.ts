@@ -9,6 +9,7 @@
  * `initCode` must be awaited once before any of this is used; see `lang.ts`.
  */
 
+export { appendLine, attachRun, coalesce, getComments } from "./comments.ts";
 export type { Mask } from "./doc.ts";
 export {
 	goDoc,
@@ -20,7 +21,6 @@ export {
 	pyDoc,
 	rustDoc,
 } from "./doc.ts";
-export { appendLine, attachRun, coalesce, getComments } from "./comments.ts";
 export {
 	codeReady,
 	getLanguageFromExt,

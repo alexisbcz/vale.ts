@@ -27,8 +27,8 @@
 import type { Manager } from "@vale-ts/check";
 import type { File } from "@vale-ts/core";
 import { lintADoc } from "./adoc.ts";
-import { lintCode } from "./code.ts";
 import { initCode } from "./code/index.ts";
+import { lintCode } from "./code.ts";
 import { hasCodeView, hasView, isRuleFile, lintData, lintRule } from "./data.ts";
 import { lintDITA } from "./dita.ts";
 import { lintFragments } from "./fragment.ts";
@@ -67,17 +67,6 @@ export {
 	VOID_TAGS,
 	withClasses,
 } from "./ast.ts";
-export type { CodeHost } from "./code.ts";
-export {
-	dropMasked,
-	lintCode,
-	lintCodeOld,
-	lintComment,
-	maskURLs,
-	rstBatch,
-	skipsComment,
-	updateQueries,
-} from "./code.ts";
 export type { Comment, Language, Mask, ScannerDelims } from "./code/index.ts";
 export {
 	codeReady,
@@ -89,6 +78,17 @@ export {
 	scanComments,
 	stripAt,
 } from "./code/index.ts";
+export type { CodeHost } from "./code.ts";
+export {
+	dropMasked,
+	lintCode,
+	lintCodeOld,
+	lintComment,
+	maskURLs,
+	rstBatch,
+	skipsComment,
+	updateQueries,
+} from "./code.ts";
 export type { DataHost } from "./data.ts";
 export {
 	hasCodeView,
@@ -100,7 +100,13 @@ export {
 	lintRule,
 } from "./data.ts";
 export type { DITAHost } from "./dita.ts";
-export { clearDITA, commonDir, lintDITA, lintDITAHTML, prepareDITA } from "./dita.ts";
+export {
+	clearDITA,
+	commonDir,
+	lintDITA,
+	lintDITAHTML,
+	prepareDITA,
+} from "./dita.ts";
 export { executeWithInput } from "./external.ts";
 export type { FragmentHost } from "./fragment.ts";
 export { adjustAlerts, commentPadding, lintFragments } from "./fragment.ts";
@@ -109,16 +115,17 @@ export { lintHTML, textToHTML } from "./html.ts";
 export type { LintResult } from "./lint.ts";
 export { DocumentErrors, Linter } from "./lint.ts";
 export { mathCloserIndex, mathPlugin } from "./math.ts";
-export type { MDXHost, Span } from "./mdx.ts";
+export type { MarkdownHost } from "./md.ts";
+export { lintMarkdown, lintMarkdownWith, newMarkdown, prepMarkdown } from "./md.ts";
+export type { MaskSpan, MDXHost } from "./mdx.ts";
 export {
 	className,
+	jsxTagSpans,
 	lintMDX,
 	maskSpans,
 	newMDX,
 	opensJsx,
 } from "./mdx.ts";
-export type { MarkdownHost } from "./md.ts";
-export { lintMarkdown, lintMarkdownWith, newMarkdown, prepMarkdown } from "./md.ts";
 export type { MetadataHost } from "./metadata.ts";
 export { lintMetadata } from "./metadata.ts";
 export type { MySTHost } from "./myst.ts";
@@ -158,11 +165,14 @@ export type { ScopedHost } from "./scoped.ts";
 export { isCode, lintScopedValues, placeAlerts } from "./scoped.ts";
 export { markSelections, wrapQuotes, wrapSections } from "./selection.ts";
 export type { Attribute, Token } from "./tokenizer.ts";
-export { getAttribute, Tokenizer, TokenType, unescape } from "./tokenizer.ts";
+export {
+	getAttribute,
+	Tokenizer,
+	TokenType,
+	unescapeEntities,
+} from "./tokenizer.ts";
 export type { TypstHost } from "./typst.ts";
 export { lintTypst } from "./typst.ts";
-export type { XMLHost } from "./xml.ts";
-export { lintXML, XSLT_ARGS } from "./xml.ts";
 export {
 	adjustPos,
 	countNewlines,
@@ -175,6 +185,8 @@ export {
 } from "./util.ts";
 export type { Aggregate, InlineCapture } from "./walker.ts";
 export { isMask, scopeSafe, trimASCII, Walker } from "./walker.ts";
+export type { XMLHost } from "./xml.ts";
+export { lintXML, XSLT_ARGS } from "./xml.ts";
 
 /**
  * A linter with every reader this build knows registered.

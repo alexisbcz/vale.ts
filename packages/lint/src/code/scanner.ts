@@ -1,10 +1,10 @@
 /**
  * Finding comments without a grammar.
  *
- * Clojure, PowerShell, Haskell, Julia and Protocol Buffers have no usable
- * tree-sitter grammar in this build (see `lang.ts`), so their comments are
- * found by their delimiters: a line comment runs from its marker to the end of
- * the line, and a block comment from its opener to the first closer.
+ * YAML, Clojure, PowerShell, Haskell, Julia and Protocol Buffers have no
+ * usable tree-sitter grammar in this build (see `lang.ts`), so their comments
+ * are found by their delimiters: a line comment runs from its marker to the
+ * end of the line, and a block comment from its opener to the first closer.
  *
  * That is all this does differently. The text is handed to the same
  * `CommentBuilder` a captured node goes through, so a comment found here is
@@ -16,6 +16,11 @@
  * Protocol Buffers option -- `get: "/v1/{name=bars/*}"` -- opened a comment
  * that swallowed the next six lines. YAML needs more than that, and has a
  * reader of its own below.
+ *
+ * A tree-sitter view's queries cannot apply here -- there is no tree to run
+ * them against -- so only the markup and the meta scope a view's first scope
+ * names are carried over. A view that selects something other than the
+ * comments of one of these languages selects nothing.
  */
 
 import { CommentBuilder } from "./query.ts";
@@ -36,7 +41,7 @@ export function scanComments(source: string, lang: Language): Comment[] {
 	let blockCol = 0;
 
 	const emit = (text: string, row: number, col: number): void => {
-		found.push(builder.build(text, row, col, "", lang.queries[0]?.type ?? "", ""));
+		found.push(builder.build(text, row, col, meta(lang), format(lang), ""));
 	};
 
 	for (let i = 0; i < lines.length; i++) {
@@ -65,8 +70,7 @@ export function scanComments(source: string, lang: Language): Comment[] {
 			const end = matchOf(delims.blockEnd, after);
 			if (end !== null) {
 				// Opened and closed on one line.
-				const stop =
-					start.index + start[0].length + end.index + end[0].length;
+				const stop = start.index + start[0].length + end.index + end[0].length;
 				emit(line.slice(start.index, stop), i, start.index);
 				continue;
 			}
@@ -103,7 +107,10 @@ function matchOf(
 	line: string,
 	strings: ReadonlyArray<[number, number]> = [],
 ): RegExpExecArray | null {
-	const all = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+	const all = new RegExp(
+		re.source,
+		re.flags.includes("g") ? re.flags : `${re.flags}g`,
+	);
 	for (let m = all.exec(line); m !== null; m = all.exec(line)) {
 		if (m[0].length === 0) {
 			all.lastIndex++;
@@ -177,14 +184,7 @@ function scanYAML(source: string, lang: Language): Comment[] {
 		const marker = yamlCommentAt(line);
 		if (marker >= 0) {
 			found.push(
-				builder.build(
-					line.slice(marker),
-					i,
-					marker,
-					"",
-					lang.queries[0]?.type ?? "",
-					"",
-				),
+				builder.build(line.slice(marker), i, marker, meta(lang), format(lang), ""),
 			);
 		}
 
@@ -242,4 +242,14 @@ function yamlCommentAt(line: string): number {
 	}
 
 	return -1;
+}
+
+/** The meta scope a view's first scope names, or "". */
+function meta(lang: Language): string {
+	return lang.queries[0]?.name ?? "";
+}
+
+/** The markup a view says these comments are written in, or "". */
+function format(lang: Language): string {
+	return lang.queries[0]?.type ?? "";
 }

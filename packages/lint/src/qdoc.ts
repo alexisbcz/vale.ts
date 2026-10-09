@@ -212,10 +212,7 @@ function qdocArg(arg: string): string {
 }
 
 function escapeAll(s: string): string {
-	return s
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;");
+	return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 /**
@@ -271,8 +268,9 @@ function imageMetaHTML(arg: string, rest: string): string {
 
 /** The start and end of a capture group, or null when it did not participate. */
 function group(m: RegExpExecArray, n: number): [number, number] | null {
-	const indices = (m as RegExpExecArray & { indices?: Array<[number, number] | undefined> })
-		.indices;
+	const indices = (
+		m as RegExpExecArray & { indices?: Array<[number, number] | undefined> }
+	).indices;
 	return indices?.[n] ?? null;
 }
 
@@ -422,8 +420,7 @@ class Converter {
 		const text = qdocInline(this.para.join("\n"));
 		this.para = [];
 
-		const top = this.stack[this.stack.length - 1];
-		if (top !== undefined && top.inItem) {
+		if (this.stack[this.stack.length - 1]?.inItem === true) {
 			this.html += `${text}\n`;
 			return;
 		}

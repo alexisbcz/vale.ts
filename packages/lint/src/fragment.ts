@@ -12,6 +12,8 @@
  */
 
 import type { Alert, Config, File } from "@vale-ts/core";
+import type { Comment, Language } from "./code/index.ts";
+import { getComments, getLanguageFromExt, stripAt } from "./code/index.ts";
 import type { CodeHost } from "./code.ts";
 import {
 	dropMasked,
@@ -20,8 +22,6 @@ import {
 	skipsComment,
 	updateQueries,
 } from "./code.ts";
-import type { Comment, Language } from "./code/index.ts";
-import { getComments, getLanguageFromExt, stripAt } from "./code/index.ts";
 import { findLine, leadingSpaces } from "./util.ts";
 
 /** What a fragment reader needs from the linter. */

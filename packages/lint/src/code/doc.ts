@@ -56,8 +56,7 @@ const KDOC_REF = /\[[^\]\n]+\](\[[A-Za-z_][\w.]*\])/g;
 
 const KDOC_NAMED_TAG =
 	/^[ \t]*@(?:param|property|throws|exception|see|sample|suppress)[ \t]+\S+/gm;
-const KDOC_BARE_TAG =
-	/^[ \t]*@(?:return|constructor|receiver|author|since)\b/gm;
+const KDOC_BARE_TAG = /^[ \t]*@(?:return|constructor|receiver|author|since)\b/gm;
 
 const JAVADOC_INLINE =
 	/\{@(?:code|link|linkplain|literal|value|docRoot|inheritDoc|index|summary|systemProperty|snippet|return)\b[^}]*\}/g;

@@ -16,7 +16,12 @@ import { mathCloserIndex } from "../src/math.ts";
 import { prepMarkdown } from "../src/md.ts";
 import { applyPatterns, hasPatterns } from "../src/patterns.ts";
 import { wrapSections } from "../src/selection.ts";
-import { getAttribute, Tokenizer, TokenType, unescape } from "../src/tokenizer.ts";
+import {
+	getAttribute,
+	Tokenizer,
+	TokenType,
+	unescapeEntities,
+} from "../src/tokenizer.ts";
 
 /** Every token in `html`, as `[type, data]` pairs. */
 function tokens(html: string): Array<[TokenType, string]> {
@@ -116,9 +121,9 @@ describe("the HTML tokenizer", () => {
 		expect(tokens("<!DOCTYPE html><p>")[0]?.[0]).toBe(TokenType.Doctype);
 	});
 
-	test("unescape matches what the walker applies twice", () => {
-		expect(unescape("&lt;b&gt;")).toBe("<b>");
-		expect(unescape(unescape("&amp;lt;"))).toBe("<");
+	test("unescapeEntities matches what the walker applies twice", () => {
+		expect(unescapeEntities("&lt;b&gt;")).toBe("<b>");
+		expect(unescapeEntities(unescapeEntities("&amp;lt;"))).toBe("<");
 	});
 });
 
@@ -329,13 +334,18 @@ describe("configuration-driven rewrites", () => {
 
 	test("a format with no delimiters is refused rather than mangled", () => {
 		const cfg = configWith(() => {});
-		expect(() =>
-			applyPatterns(cfg, { ...exts, normed: ".txt" }, "x"),
-		).toThrow(/not supported/);
+		expect(() => applyPatterns(cfg, { ...exts, normed: ".txt" }, "x")).toThrow(
+			/not supported/,
+		);
 	});
 
 	test("hasPatterns reports whether anything would be rewritten", () => {
-		expect(hasPatterns(configWith(() => {}), exts)).toBe(false);
+		expect(
+			hasPatterns(
+				configWith(() => {}),
+				exts,
+			),
+		).toBe(false);
 		const cfg = configWith((c) => {
 			c.tokenIgnores["*"] = ["x"];
 			c.secToPat["*"] = compilePattern("*");

@@ -8,7 +8,7 @@
  * from.
  */
 
-import { Query, type Node, type Tree } from "web-tree-sitter";
+import type { Node, Query, Tree } from "web-tree-sitter";
 import type { Comment, Language } from "./types.ts";
 
 /**
@@ -254,10 +254,7 @@ export class QueryEngine extends CommentBuilder {
  * Blank lines -- those that are empty after trimming -- are ignored so they do
  * not force the indent to zero.
  */
-export function commonIndent(
-	lines: readonly string[],
-	cutset: string,
-): number {
+export function commonIndent(lines: readonly string[], cutset: string): number {
 	let common = -1;
 	for (const line of lines) {
 		const rest = trimLeftSet(line, cutset);

@@ -36,7 +36,8 @@ export function lintScopedValues(
 	f.scoped = {};
 	for (const match of values) {
 		for (const sv of match.values) {
-			(f.scoped[match.scope] ??= []).push(sv.text);
+			f.scoped[match.scope] ??= [];
+			f.scoped[match.scope].push(sv.text);
 		}
 	}
 

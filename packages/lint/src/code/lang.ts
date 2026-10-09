@@ -28,25 +28,25 @@
  * Both languages are read by the scanner instead.
  */
 
+import { createRequire } from "node:module";
 import type { Scope } from "@vale-ts/core";
 import { getNormedExt } from "@vale-ts/core";
-import { createRequire } from "node:module";
 import { Language as Grammar, Parser } from "web-tree-sitter";
 import {
 	C_DIRECTIVE,
 	CSHARP_DIRECTIVE,
 	GO_DIRECTIVE,
-	JAVA_DIRECTIVE,
-	JS_DIRECTIVE,
-	KOTLIN_DIRECTIVE,
-	PY_DIRECTIVE,
-	RUBY_DIRECTIVE,
 	goDoc,
 	goDocName,
+	JAVA_DIRECTIVE,
+	JS_DIRECTIVE,
 	javadoc,
 	jsDoc,
+	KOTLIN_DIRECTIVE,
 	kDoc,
+	PY_DIRECTIVE,
 	pyDoc,
+	RUBY_DIRECTIVE,
 	rustDoc,
 } from "./doc.ts";
 import type { Language, ScannerDelims } from "./types.ts";
@@ -175,7 +175,9 @@ function scope(expr: string, name = "", type = ""): Scope {
 }
 
 /** The defaults a language definition fills in. */
-function language(init: Partial<Language> & Pick<Language, "delims" | "queries" | "padding">): Language {
+function language(
+	init: Partial<Language> & Pick<Language, "delims" | "queries" | "padding">,
+): Language {
 	return {
 		prefix: null,
 		cutset: "",

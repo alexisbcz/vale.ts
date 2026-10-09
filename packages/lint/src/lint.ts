@@ -19,13 +19,7 @@
  */
 
 import * as path from "node:path";
-import type {
-	Definition,
-	Manager,
-	Rule,
-	Scope,
-	Selection,
-} from "@vale-ts/check";
+import type { Definition, Manager, Rule, Scope, Selection } from "@vale-ts/check";
 import { newScope } from "@vale-ts/check";
 import type {
 	Alert,
@@ -53,8 +47,8 @@ import {
 } from "@vale-ts/core";
 import { quoteSpans, segmentText } from "@vale-ts/nlp";
 import { lintHTMLTokens, type ReaderHost } from "./ast.ts";
-import { lintHTML, textToHTML } from "./html.ts";
-import { lintMarkdown, type MarkdownHost } from "./md.ts";
+import { textToHTML } from "./html.ts";
+import type { MarkdownHost } from "./md.ts";
 import { lintMetadata, type MetadataHost } from "./metadata.ts";
 import { applyPatterns, type ExtensionConfig } from "./patterns.ts";
 import { lintScopedValues, type ScopedHost } from "./scoped.ts";
@@ -441,11 +435,7 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 			}
 		}
 
-		if (
-			!simple &&
-			file.format === "data" &&
-			this.hasCodeView?.(file) === true
-		) {
+		if (!simple && file.format === "data" && this.hasCodeView?.(file) === true) {
 			const code = this.readers.get("code");
 			if (code !== undefined) {
 				code(file);

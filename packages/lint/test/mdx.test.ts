@@ -219,7 +219,7 @@ const cases: Case[] = [
 	},
 	{
 		name: "an escaped quote inside an attribute expression",
-		in: "<Table rows={[{d: 'the cluster\\'s version', e: \"a \\\"quoted\\\" word\"}]} />\n\nProse here.\n",
+		in: '<Table rows={[{d: \'the cluster\\\'s version\', e: "a \\"quoted\\" word"}]} />\n\nProse here.\n',
 		want: ['<code class="mdxNode mdxJsxFlowElement">', "<p>Prose here.</p>"],
 		absent: ["<p>Prose here.</p></code>"],
 	},
@@ -289,7 +289,7 @@ describe("opensJsx", () => {
  */
 test("the JSX tags are masked out of the source", () => {
 	const src =
-		'import A from \'./a\'\n\n<Update rss={{ title:"Same words" }}>\n\n## Same words\n\n</Update>\n\n{/* vale off */}\n\nA <Badge color="red">tag</Badge> and {props.x} here.\n\n```js\nconst y = 1\n```\n\n<Card\n  title={\'Alt words\'}\n/>\n\nAlt words again.\n';
+		"import A from './a'\n\n<Update rss={{ title:\"Same words\" }}>\n\n## Same words\n\n</Update>\n\n{/* vale off */}\n\nA <Badge color=\"red\">tag</Badge> and {props.x} here.\n\n```js\nconst y = 1\n```\n\n<Card\n  title={'Alt words'}\n/>\n\nAlt words again.\n";
 	const got = maskSpans(src, jsxTagSpans(src));
 
 	// A childless element spanning lines is tags and nothing else, masked like

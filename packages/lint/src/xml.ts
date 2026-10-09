@@ -39,27 +39,18 @@ export const XSLT_ARGS: readonly string[] = [
 export function lintXML(host: XMLHost, f: File): void {
 	const xsltproc = which(["xsltproc", "xsltproc.exe"]);
 	if (xsltproc === "") {
-		throw newE100(
-			f.path,
-			new Error("xsltproc not found; it's needed to read XML"),
-		);
+		throw newE100(f.path, new Error("xsltproc not found; it's needed to read XML"));
 	}
 	if (f.transform === "") {
 		throw newE100(
 			f.path,
-			new Error(
-				"no XSLT transform provided; set Transform in this file's section",
-			),
+			new Error("no XSLT transform provided; set Transform in this file's section"),
 		);
 	}
 
 	let html: string;
 	try {
-		html = executeWithInput(xsltproc, f.content, [
-			...XSLT_ARGS,
-			f.transform,
-			"-",
-		]);
+		html = executeWithInput(xsltproc, f.content, [...XSLT_ARGS, f.transform, "-"]);
 	} catch (err) {
 		throw newE100(f.path, err);
 	}

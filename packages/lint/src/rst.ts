@@ -30,11 +30,11 @@
  * input and stops.
  */
 
+import { spawnSync } from "node:child_process";
+import { closeSync, openSync, readSync, realpathSync } from "node:fs";
+import * as path from "node:path";
 import type { Config, File } from "@vale-ts/core";
 import { newE100, which } from "@vale-ts/core";
-import { spawnSync } from "node:child_process";
-import { openSync, readSync, closeSync, realpathSync } from "node:fs";
-import * as path from "node:path";
 import { executeWithInput } from "./external.ts";
 
 /** What a reStructuredText reader needs from the linter. */
@@ -51,8 +51,7 @@ export interface RSTHost {
  * The runtime options a directive may carry (`:caption:`, `:linenos:`) are
  * matched too, so they do not survive as prose under a literal block.
  */
-const RE_CODE_BLOCK =
-	/\.\. (?:raw|code(?:-block)?):: *(?:[\w-]+)?(?:\s+:\w+:.*)*/g;
+const RE_CODE_BLOCK = /\.\. (?:raw|code(?:-block)?):: *(?:[\w-]+)?(?:\s+:\w+:.*)*/g;
 
 /**
  * A `contents` directive repeats the document's headings, so it is read as
@@ -252,7 +251,11 @@ export function rstInterpreter(exe: string): string {
 	const line = firstLine(exe);
 	if (!line.startsWith("#!")) return "";
 
-	const fields = line.slice(2).trim().split(/\s+/).filter((f) => f !== "");
+	const fields = line
+		.slice(2)
+		.trim()
+		.split(/\s+/)
+		.filter((f) => f !== "");
 	if (fields.length === 0) return "";
 
 	// `#!/usr/bin/env python3` names the interpreter in the second field.
@@ -355,10 +358,7 @@ function framedConvert(
 	text: string,
 ): string {
 	const body = Buffer.from(text, "utf8");
-	const input = Buffer.concat([
-		Buffer.from(`${body.length}\n`, "utf8"),
-		body,
-	]);
+	const input = Buffer.concat([Buffer.from(`${body.length}\n`, "utf8"), body]);
 
 	const result = spawnSync(argv[0], [...argv.slice(1), ...attrs], {
 		input,
@@ -476,10 +476,7 @@ const RE_RST_SPLIT = new RegExp(
 );
 
 /** Converts the documents in chunks, and returns each one's HTML in order. */
-export function convertRSTBatch(
-	host: RSTHost,
-	docs: readonly string[],
-): string[] {
+export function convertRSTBatch(host: RSTHost, docs: readonly string[]): string[] {
 	const exe = rstExe();
 	if (exe === "") throw new Error("rst2html not found");
 

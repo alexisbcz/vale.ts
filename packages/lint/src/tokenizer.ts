@@ -315,6 +315,6 @@ export function getAttribute(tok: Token, key: string): string {
 }
 
 /** Decodes HTML entities, as the walker does to a token's text. */
-export function unescape(s: string): string {
+export function unescapeEntities(s: string): string {
 	return decodeHTML(s);
 }

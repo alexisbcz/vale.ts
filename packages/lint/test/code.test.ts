@@ -9,6 +9,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import {
 	appendLine,
+	type Comment,
 	getComments,
 	getLanguageFromExt,
 	goDoc,
@@ -16,15 +17,14 @@ import {
 	javadoc,
 	jsDoc,
 	kDoc,
+	type Mask,
 	masked,
 	pyDoc,
 	rustDoc,
 	stripAt,
-	type Comment,
-	type Mask,
 } from "../src/code/index.ts";
-import { C_STYLE_PREFIX } from "../src/code/util.ts";
 import { CommentBuilder } from "../src/code/query.ts";
+import { C_STYLE_PREFIX } from "../src/code/util.ts";
 
 beforeAll(async () => {
 	await initCode();
@@ -345,7 +345,12 @@ test("rustdoc masks its intra-doc links", () => {
 test("a Go doc comment masks its links", () => {
 	const text =
 		"See [Name] and [pkg.Name] and [*T] for the details; [x]: is a definition.\n";
-	checkMasks(goDoc(text), text, ["[Name]", "[pkg.Name]", "[*T]"], ["[x]", "the details"]);
+	checkMasks(
+		goDoc(text),
+		text,
+		["[Name]", "[pkg.Name]", "[*T]"],
+		["[x]", "the details"],
+	);
 });
 
 test("a docstring masks its field names", () => {

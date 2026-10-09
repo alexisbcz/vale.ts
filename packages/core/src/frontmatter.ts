@@ -9,6 +9,7 @@
 import { parse as parseTOML } from "smol-toml";
 import { type Document, isMap, isScalar, parseDocument, type Scalar } from "yaml";
 import { blockScalarContentStart } from "./structured.ts";
+import { parseLenientDocument, YAMLError } from "./yaml.ts";
 
 /** The delimiters a front-matter block may be wrapped in. */
 const DELIMITERS: Array<[string, string, "yaml" | "toml" | "json"]> = [
@@ -141,6 +142,25 @@ export interface ScopedValues {
  * `fm` is the block as the file holds it, starting at the file's first line,
  * so the positions reported are the file's.
  */
+/**
+ * A front-matter parse error, worded as `yaml.Unmarshal` words it.
+ *
+ * `yaml.v3` names the line in the message itself, and the message is what the
+ * person reading the error sees. Two things move the line:
+ *
+ * - A truncated block's error sits at the end of the input, which this parser
+ *   places on the empty line after the last one written; `yaml.v3` names the
+ *   last line that has content.
+ * - Go is given the block's inner text, where this is given the block with its
+ *   delimiters blanked -- which is what keeps a *value's* line right. So the
+ *   opening delimiter's line comes back off here.
+ */
+function frontMatterError(err: YAMLError, lines: readonly string[]): string {
+	let line = err.line;
+	while (line > 1 && (lines[line - 1] ?? "").trim() === "") line--;
+	return `yaml: line ${Math.max(line - 1, 1)}: ${err.message}`;
+}
+
 export function frontMatterValues(fm: string): ScopedValues[] {
 	// The delimiter lines are blanked rather than cut, so the lines keep their
 	// numbers.
@@ -150,11 +170,15 @@ export function frontMatterValues(fm: string): ScopedValues[] {
 		if (t === "---" || t === ";;;") lines[i] = "";
 	}
 
+	// Read as leniently as Vale reads any other YAML, and no more: front
+	// matter Vale could not parse is a document Vale could not read, which the
+	// caller reports rather than linting the body anyway.
 	let doc: Document.Parsed;
 	try {
-		doc = parseDocument(lines.join("\n"), { keepSourceTokens: true });
-	} catch {
-		return [];
+		doc = parseLenientDocument(lines.join("\n"));
+	} catch (err) {
+		if (err instanceof YAMLError) throw new Error(frontMatterError(err, lines));
+		throw err;
 	}
 
 	const root = doc.contents;

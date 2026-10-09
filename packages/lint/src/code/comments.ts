@@ -222,10 +222,7 @@ function dropVerbatim(
 }
 
 /** Removes the comments addressed to a tool rather than a reader. */
-function dropDirectives(
-	comments: readonly Comment[],
-	lang: Language,
-): Comment[] {
+function dropDirectives(comments: readonly Comment[], lang: Language): Comment[] {
 	const directive = lang.directive;
 	if (directive === null) return [...comments];
 	return comments.filter((c) => !directive.test(c.source));

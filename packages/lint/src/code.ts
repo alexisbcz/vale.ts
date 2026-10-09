@@ -15,16 +15,21 @@
 import type { Alert, Block, Config, File, Scope } from "@vale-ts/core";
 import {
 	blankRunes,
-	Block as CoreBlock,
 	COMMENTS_BY_NORMED_EXT,
+	Block as CoreBlock,
 	sanitize,
 	splitAfterLines,
 } from "@vale-ts/core";
+import type { Comment, Language } from "./code/index.ts";
+import {
+	getComments,
+	getLanguageFromExt,
+	hasLanguage,
+	masked,
+} from "./code/index.ts";
 import { adjustAlerts } from "./fragment.ts";
 import { lintQDocFragment } from "./qdoc.ts";
 import { convertRSTBatch, lintRST, lintRSTHTML, prepareRST } from "./rst.ts";
-import type { Comment, Language } from "./code/index.ts";
-import { getComments, getLanguageFromExt, hasLanguage, masked } from "./code/index.ts";
 
 /** What a source-file reader needs from the linter. */
 export interface CodeHost {
@@ -33,13 +38,7 @@ export interface CodeHost {
 	lintHTMLTokens(f: File, raw: string, offset: number): void;
 	lintMetadata(f: File): void;
 	lintLines(f: File): void;
-	lintBlock(
-		f: File,
-		blk: Block,
-		lines: number,
-		pad: number,
-		lookup: boolean,
-	): void;
+	lintBlock(f: File, blk: Block, lines: number, pad: number, lookup: boolean): void;
 	lintSummary(f: File): void;
 	/** Reads the file as the named markup. */
 	readAs(f: File, format: string): void;
@@ -71,17 +70,14 @@ export function updateQueries(f: File, cfg: Config): Scope[] {
  * your comments must not also cost you the ability to exclude one. See #858.
  */
 export function skipsComment(cfg: Config, scope: string): boolean {
-	return (
-		cfg.ignoredScopes.includes("comment") || cfg.ignoredScopes.includes(scope)
-	);
+	return cfg.ignoredScopes.includes("comment") || cfg.ignoredScopes.includes(scope);
 }
 
 /**
  * A URL in a comment, up to the punctuation that would close a sentence or a
  * bracket around it.
  */
-const URL_RE =
-	/\b(?:https?|ftp):\/\/[^\s<>"'`)\]]*[^\s<>"'`)\].,;:!?]/g;
+const URL_RE = /\b(?:https?|ftp):\/\/[^\s<>"'`)\]]*[^\s<>"'`)\].,;:!?]/g;
 
 /**
  * Blanks the URLs in a comment.
@@ -199,11 +195,7 @@ export function rstBatch(
  * The alerts are still placed within the comment's text, so this runs before
  * they are moved back into the source.
  */
-export function dropMasked(
-	alerts: Alert[],
-	last: number,
-	comment: Comment,
-): void {
+export function dropMasked(alerts: Alert[], last: number, comment: Comment): void {
 	if (comment.masks.length === 0) return;
 	const kept = alerts
 		.slice(last)

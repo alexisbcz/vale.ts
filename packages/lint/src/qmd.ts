@@ -11,10 +11,10 @@
 
 import type { File } from "@vale-ts/core";
 import MarkdownIt from "markdown-it";
-import footnote from "markdown-it-footnote";
-import taskLists from "markdown-it-task-lists";
 import type StateBlock from "markdown-it/lib/rules_block/state_block.mjs";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
+import footnote from "markdown-it-footnote";
+import taskLists from "markdown-it-task-lists";
 import { mathPlugin } from "./math.ts";
 import { lintMarkdownWith, type MarkdownHost } from "./md.ts";
 

@@ -264,9 +264,7 @@ export function orgToHTML(src: string): string {
 			closeLists(0);
 			// The definition's body is written where the source has it, not
 			// collected at the end of the document.
-			out.push(
-				`<div class="footnote-definition">${inline(footnote[2])}</div>\n`,
-			);
+			out.push(`<div class="footnote-definition">${inline(footnote[2])}</div>\n`);
 			continue;
 		}
 
@@ -368,11 +366,7 @@ function tableHTML(rows: readonly string[]): string {
 	for (let i = 0; i < rows.length; i++) {
 		if (RE_TABLE_RULE.test(rows[i])) continue;
 		const tag = rule > 0 && i < rule ? "th" : "td";
-		const cells = rows[i]
-			.trim()
-			.replace(/^\|/, "")
-			.replace(/\|$/, "")
-			.split("|");
+		const cells = rows[i].trim().replace(/^\|/, "").replace(/\|$/, "").split("|");
 		out += "<tr>";
 		for (const cell of cells) out += `<${tag}>${inline(cell.trim())}</${tag}>`;
 		out += "</tr>\n";
@@ -480,9 +474,7 @@ export function inline(text: string): string {
 			const span = readEmphasis(text, i, c);
 			if (span !== null) {
 				take();
-				const body = VERBATIM.has(c)
-					? escapeHTML(span.body)
-					: inline(span.body);
+				const body = VERBATIM.has(c) ? escapeHTML(span.body) : inline(span.body);
 				out += `<${tag}>${body}</${tag}>`;
 				i = span.end;
 				continue;
@@ -584,10 +576,7 @@ function isSpace(c: string): boolean {
 }
 
 function escapeHTML(s: string): string {
-	return s
-		.replaceAll("&", "&amp;")
-		.replaceAll("<", "&lt;")
-		.replaceAll(">", "&gt;");
+	return s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
 function escapeAttr(s: string): string {

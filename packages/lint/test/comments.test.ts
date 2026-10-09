@@ -13,10 +13,10 @@ import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import {
+	type Comment,
 	getComments,
 	getLanguageFromExt,
 	initCode,
-	type Comment,
 } from "../src/code/index.ts";
 
 beforeAll(async () => {
@@ -33,7 +33,8 @@ function fixture(name: string): Comment[] {
 /** Each comment as `line:offset scope` plus its first line of prose. */
 function describeComments(found: readonly Comment[]): string[] {
 	return found.map(
-		(c) => `${c.line}:${c.offset} ${c.scope} ${JSON.stringify(c.text.split("\n")[0])}`,
+		(c) =>
+			`${c.line}:${c.offset} ${c.scope} ${JSON.stringify(c.text.split("\n")[0])}`,
 	);
 }
 

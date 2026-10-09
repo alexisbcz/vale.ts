@@ -23,7 +23,7 @@
 
 import type { File, Inline, Run } from "@vale-ts/core";
 import { Block, strLen } from "@vale-ts/core";
-import { type Token, TokenType, unescape } from "./tokenizer.ts";
+import { type Token, TokenType, unescapeEntities } from "./tokenizer.ts";
 
 /** One inline element's text, gathered as the block containing it is read. */
 export interface InlineCapture {
@@ -761,7 +761,7 @@ export function trimASCII(s: string): string {
 
 /** A token's text as the walker reads it: trimmed, then decoded again. */
 export function walkText(tok: Token): string {
-	return unescape(trimASCII(tok.data));
+	return unescapeEntities(trimASCII(tok.data));
 }
 
 export type { Inline };

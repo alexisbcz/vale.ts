@@ -18,10 +18,10 @@
 
 import type { Config, File } from "@vale-ts/core";
 import MarkdownIt from "markdown-it";
-import footnote from "markdown-it-footnote";
-import taskLists from "markdown-it-task-lists";
 import type StateBlock from "markdown-it/lib/rules_block/state_block.mjs";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
+import footnote from "markdown-it-footnote";
+import taskLists from "markdown-it-task-lists";
 import { mathPlugin } from "./math.ts";
 import { lintMarkdownWith, type MarkdownHost } from "./md.ts";
 
@@ -132,7 +132,10 @@ function roleText(
 
 /** The text of a line, without its newline. */
 function lineText(state: StateBlock, line: number): string {
-	return state.src.slice(state.bMarks[line] + state.tShift[line], state.eMarks[line]);
+	return state.src.slice(
+		state.bMarks[line] + state.tShift[line],
+		state.eMarks[line],
+	);
 }
 
 /** A fence's marker, its length, and what follows it, or null. */
@@ -184,8 +187,7 @@ function directiveRule(sphinx: Sphinx) {
 		if (silent) return true;
 
 		const name = named[1];
-		const literal =
-			LITERAL.has(name) || sphinx.code.has(name.toLowerCase());
+		const literal = LITERAL.has(name) || sphinx.code.has(name.toLowerCase());
 
 		// `opts` tracks the option lines under the opener: 1 while a field
 		// list may continue, 2 inside a `---`-delimited YAML block, 0 once

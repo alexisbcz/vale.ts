@@ -24,9 +24,8 @@ import {
 import {
 	getAttribute,
 	type Token,
-	Tokenizer,
 	TokenType,
-	unescape,
+	unescapeEntities,
 } from "./tokenizer.ts";
 import { type Aggregate, type InlineCapture, trimASCII, Walker } from "./walker.ts";
 
@@ -464,7 +463,7 @@ class TokenReader {
 		const tok = this.tz.token();
 		// Only ASCII whitespace is trimmed: a non-breaking or narrow space
 		// beside inline markup is text the rules should see, not a separator.
-		return { type, tok, txt: unescape(trimASCII(tok.data)) };
+		return { type, tok, txt: unescapeEntities(trimASCII(tok.data)) };
 	}
 }
 

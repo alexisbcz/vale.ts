@@ -46,12 +46,12 @@
 import type { Config, File } from "@vale-ts/core";
 import { newE201FromPosition } from "@vale-ts/core";
 import MarkdownIt from "markdown-it";
-import footnote from "markdown-it-footnote";
-import taskLists from "markdown-it-task-lists";
 import htmlBlock from "markdown-it/lib/rules_block/html_block.mjs";
 import type StateBlock from "markdown-it/lib/rules_block/state_block.mjs";
 import type StateInline from "markdown-it/lib/rules_inline/state_inline.mjs";
 import type Token from "markdown-it/lib/token.mjs";
+import footnote from "markdown-it-footnote";
+import taskLists from "markdown-it-task-lists";
 import { mathPlugin } from "./math.ts";
 import { prepMarkdown } from "./md.ts";
 
@@ -64,7 +64,7 @@ export interface MDXHost {
 }
 
 /** A source range with no prose in it. */
-export type Span = [number, number];
+export type MaskSpan = [number, number];
 
 /** What a parse records on the side. */
 interface MDXEnv {
@@ -438,7 +438,14 @@ export function opensJsx(line: string, pos: number): boolean {
 	if (!isTagName(rest[0])) return false;
 	// A scheme (`https:`) or an email (`user@host`) means an autolink.
 	for (const c of rest) {
-		if (c === " " || c === "\t" || c === ">" || c === "/" || c === "\n" || c === "{") {
+		if (
+			c === " " ||
+			c === "\t" ||
+			c === ">" ||
+			c === "/" ||
+			c === "\n" ||
+			c === "{"
+		) {
 			return true;
 		}
 		if (!isTagName(c)) return false;
@@ -507,7 +514,8 @@ function netOpens(line: string, name: string): number {
 			continue;
 		}
 		const end = line.indexOf(">", k);
-		if (end < 0) net++; // the tag spans lines
+		if (end < 0)
+			net++; // the tag spans lines
 		else if (end === k || line[end - 1] !== "/") net++;
 	}
 	return net;
@@ -535,8 +543,8 @@ export function className(name: string): string {
  * walker skips it in any case. Everything else is scanned straight through, so
  * a tag that spans lines is found whole.
  */
-export function jsxTagSpans(content: string): Span[] {
-	const spans: Span[] = [];
+export function jsxTagSpans(content: string): MaskSpan[] {
+	const spans: MaskSpan[] = [];
 	const lines = content.split("\n");
 
 	let at = 0;
@@ -579,7 +587,7 @@ export function jsxTagSpans(content: string): Span[] {
 }
 
 /** Blanks the given ranges of `content`, character for character, keeping newlines. */
-export function maskSpans(content: string, spans: readonly Span[]): string {
+export function maskSpans(content: string, spans: readonly MaskSpan[]): string {
 	if (spans.length === 0) return content;
 	const b = [...content];
 	for (const [from, to] of spans) {

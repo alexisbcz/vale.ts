@@ -17,6 +17,17 @@
  * first, with the same inputs, and the cache it fills is consulted here.
  */
 
+import { spawnSync } from "node:child_process";
+import {
+	mkdtempSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	statSync,
+	writeFileSync,
+} from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
 import type { Config, File } from "@vale-ts/core";
 import {
 	formatFromExt,
@@ -28,17 +39,6 @@ import {
 	walk,
 	which,
 } from "@vale-ts/core";
-import { spawnSync } from "node:child_process";
-import {
-	mkdtempSync,
-	readFileSync,
-	readdirSync,
-	rmSync,
-	statSync,
-	writeFileSync,
-} from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
 
 /** What a DITA reader needs from the linter. */
 export interface DITAHost {

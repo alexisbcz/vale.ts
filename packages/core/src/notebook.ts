@@ -23,7 +23,7 @@ import {
 } from "./structured.ts";
 import { strLen } from "./util.ts";
 import type { Part, ScopedValue, ViewTarget } from "./view.ts";
-import { parseLenientDocument } from "./yaml.ts";
+import { parseLenientDocument, YAMLError } from "./yaml.ts";
 
 /** One cell of a notebook. */
 export interface Cell {
@@ -74,7 +74,24 @@ export const KERNEL_EXTS: Readonly<Record<string, string>> = {
 export function parseNotebook(f: ViewTarget): Cell[] {
 	// A notebook is JSON, which is YAML, and is read as leniently as every
 	// other YAML file Vale reads. See `yaml.ts`.
-	const doc = parseLenientDocument(f.content);
+	let doc: ReturnType<typeof parseLenientDocument>;
+	try {
+		doc = parseLenientDocument(f.content);
+	} catch (err) {
+		// `yaml.Unmarshal` names the line in the message itself, and the
+		// message is what the person reading the error sees.
+		//
+		// A truncated document's error sits at the end of the input, which this
+		// parser places on the empty line after the last one written; `yaml.v3`
+		// names the last line that has content.
+		if (err instanceof YAMLError) {
+			const lines = f.content.split("\n");
+			let line = err.line;
+			while (line > 1 && (lines[line - 1] ?? "").trim() === "") line--;
+			throw new Error(`yaml: line ${line}: ${err.message}`);
+		}
+		throw err;
+	}
 	const root = doc.contents;
 	if (!isMap(root)) throw new Error("a notebook is a JSON object");
 
