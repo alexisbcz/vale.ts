@@ -17,9 +17,9 @@ import { Fields } from "./decode.ts";
 import {
 	type Definition,
 	formatMessages,
+	type Rule,
 	readDefinition,
 	readStructureError,
-	type Rule,
 } from "./definition.ts";
 import { isTimeout, tengo } from "./tengo.ts";
 

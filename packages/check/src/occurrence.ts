@@ -20,10 +20,10 @@ import {
 	type Definition,
 	IGNORE_CASE,
 	makeAlert,
+	type Rule,
 	re2Loc,
 	readDefinition,
 	readStructureError,
-	type Rule,
 } from "./definition.ts";
 import { patternError } from "./pattern-error.ts";
 
@@ -132,10 +132,7 @@ export class Occurrence implements Rule {
 		// The count goes in as a string, which `formatMessage` renders for
 		// either `%d` or `%s`, so a message may use whichever reads better.
 		a.message = formatMessage(this.definition.message, String(occurrences));
-		a.description = formatMessage(
-			this.definition.description,
-			String(occurrences),
-		);
+		a.description = formatMessage(this.definition.description, String(occurrences));
 		alerts.push(a);
 
 		return alerts;

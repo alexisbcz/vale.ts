@@ -14,10 +14,10 @@ import {
 	type Definition,
 	isMatch,
 	makeAlert,
+	type Rule,
 	re2Loc,
 	readDefinition,
 	readStructureError,
-	type Rule,
 	updateExceptions,
 	withinPhrase,
 } from "./definition.ts";

@@ -5,10 +5,7 @@ describe("sentence case", () => {
 	const cases: Array<[string, string]> = [
 		["", ""],
 		["1. An important heading", "1. An important heading"],
-		[
-			"getting started with Vale server",
-			"Getting started with vale server",
-		],
+		["getting started with Vale server", "Getting started with vale server"],
 		[
 			"Lession 1: getting started with vale server",
 			"Lession 1: Getting started with vale server",
@@ -101,9 +98,7 @@ describe("AP style leaves the short words alone", () => {
 describe("Chicago style lowercases prepositions of any length", () => {
 	const tc = new strcase.TitleConverter(strcase.chicagoStyle);
 	test("a longer preposition", () => {
-		expect(tc.convert("life throughout the ages")).toBe(
-			"Life throughout the Ages",
-		);
+		expect(tc.convert("life throughout the ages")).toBe("Life throughout the Ages");
 	});
 });
 

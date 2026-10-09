@@ -34,15 +34,14 @@ test("a misspelling is reported where it occurs", () => {
 	expect(alerts.length).toBe(1);
 	expect(alerts[0]!.match).toBe("mispelling");
 	expect(alerts[0]!.hasByteOffsets).toBe(true);
-	expect(text.slice(alerts[0]!.span[0]!, alerts[0]!.span[1]!)).toBe(
-		"mispelling",
-	);
+	expect(text.slice(alerts[0]!.span[0]!, alerts[0]!.span[1]!)).toBe("mispelling");
 });
 
 test("a correctly spelled block is quiet", () => {
 	const rule = makeSpelling();
-	expect(rule.run(block("This is a sentence.", "text"), testFile(), testConfig())
-		.length).toBe(0);
+	expect(
+		rule.run(block("This is a sentence.", "text"), testFile(), testConfig()).length,
+	).toBe(0);
 });
 
 test("each occurrence of a repeated misspelling gets its own position", () => {
@@ -66,9 +65,9 @@ test("an accepted vocabulary term is not a misspelling", () => {
 		{ extends: "spelling", name: "Vale.Spelling", message: "'%s'?" },
 		"internal",
 	);
-	expect(rule.run(block("We use Kubernetes.", "text"), testFile(), cfg).length).toBe(
-		0,
-	);
+	expect(
+		rule.run(block("We use Kubernetes.", "text"), testFile(), cfg).length,
+	).toBe(0);
 });
 
 test("an accepted phrase's component words are still checked elsewhere", () => {
@@ -85,9 +84,7 @@ test("an accepted phrase's component words are still checked elsewhere", () => {
 		rule.run(block("A mea culpa follows.", "text"), testFile(), cfg).length,
 	).toBe(0);
 	// The same word on its own is not.
-	expect(rule.run(block("A mea follows.", "text"), testFile(), cfg).length).toBe(
-		1,
-	);
+	expect(rule.run(block("A mea follows.", "text"), testFile(), cfg).length).toBe(1);
 });
 
 test("a user filter skips a word", () => {
@@ -145,7 +142,11 @@ test("`split` checks an identifier's parts at their own positions", () => {
 
 test("a dictionary word in another case is offered as the fix", () => {
 	const rule = makeSpelling();
-	const alerts = rule.run(block("We use github daily.", "text"), testFile(), testConfig());
+	const alerts = rule.run(
+		block("We use github daily.", "text"),
+		testFile(),
+		testConfig(),
+	);
 	expect(alerts.length).toBe(1);
 	expect(alerts[0]!.action.name).toBe("replace");
 	expect(alerts[0]!.suggestions).toEqual(["GitHub"]);
@@ -155,7 +156,11 @@ test("a dictionary word in another case is offered as the fix", () => {
 test("an identifier-shaped word in a Markdown file is offered as code", () => {
 	const rule = makeSpelling();
 	const f = testFile({ normedExt: ".md" });
-	const alerts = rule.run(block("Set the api_version value.", "text"), f, testConfig());
+	const alerts = rule.run(
+		block("Set the api_version value.", "text"),
+		f,
+		testConfig(),
+	);
 	expect(alerts.length).toBe(1);
 	expect(alerts[0]!.suggestions).toEqual(["`api_version`"]);
 });

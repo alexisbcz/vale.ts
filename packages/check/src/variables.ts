@@ -11,7 +11,11 @@
 
 import { Regexp } from "@vale-ts/regex";
 import { isMatch } from "./definition.ts";
-import type { IndicatorFunc, SentenceConverter, TitleConverter } from "./strcase.ts";
+import type {
+	IndicatorFunc,
+	SentenceConverter,
+	TitleConverter,
+} from "./strcase.ts";
 import { goStringsTitle, hasAnySuffix } from "./util.ts";
 
 const RE_NUMBER_LIST = Regexp.mustCompile(String.raw`\d+\.`);

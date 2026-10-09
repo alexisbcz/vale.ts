@@ -215,3 +215,13 @@ export {
 	setAffixResolver,
 	VOCAB_FILES,
 } from "./vocab.ts";
+export type { YAMLErrorPosition } from "./yaml.ts";
+export {
+	goWording,
+	parseLenient,
+	parseLenientDocument,
+	positionOfOffset,
+	tryParseLenient,
+	YAMLError,
+	yamlErrorText,
+} from "./yaml.ts";

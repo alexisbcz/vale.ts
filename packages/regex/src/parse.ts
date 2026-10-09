@@ -22,12 +22,25 @@ import { seq } from "./ast.ts";
 export class PatternError extends Error {
 	readonly pattern: string;
 	readonly offset: number;
+	/** The reason alone, without the pattern quoted after it. */
+	readonly reason: string;
 
+	/**
+	 * The message reads as `regexp2`'s does: the reason, then the pattern it is
+	 * about, quoted.
+	 *
+	 * That shape is part of the output -- a style author sees it as the `E201`
+	 * for their rule, and Vale's own end-to-end cases assert on the text -- so
+	 * the wording below matches `regexp2`'s error codes rather than being
+	 * phrased afresh. The offset is kept as a field, since nothing in Go's
+	 * message carries one.
+	 */
 	constructor(message: string, pattern: string, offset: number) {
-		super(`${message} in \`${pattern}\` at offset ${offset}`);
+		super(`${message} in \`${pattern}\``);
 		this.name = "PatternError";
 		this.pattern = pattern;
 		this.offset = offset;
+		this.reason = message;
 	}
 }
 
@@ -73,7 +86,7 @@ class Parser {
 		const root = this.parseAlternation(false);
 		if (this.pos < this.src.length) {
 			// The only way out of parseAlternation short of the end is a `)`.
-			throw new PatternError("unmatched `)`", this.src, this.pos);
+			throw new PatternError("unexpected )", this.src, this.pos);
 		}
 
 		// .NET numbers unnamed groups first, then named ones.
@@ -135,7 +148,7 @@ class Parser {
 			if (c === ")") {
 				if (nested) break;
 				// A stray `)` is an error in .NET too.
-				throw new PatternError("unmatched `)`", this.src, this.pos);
+				throw new PatternError("unexpected )", this.src, this.pos);
 			}
 
 			const atom = this.parseAtom(nested);
@@ -290,7 +303,7 @@ class Parser {
 			case "*":
 			case "+":
 			case "?":
-				throw new PatternError("nothing to repeat", this.src, this.pos);
+				throw new PatternError("missing argument to repetition operator", this.src, this.pos);
 			default:
 				return this.parseLiteralRun();
 		}
@@ -448,7 +461,7 @@ class Parser {
 		let name = "";
 		while (!this.eof() && this.peek() !== closer) name += this.src[this.pos++];
 		if (this.eof()) {
-			throw new PatternError("unterminated group name", this.src, open);
+			throw new PatternError("invalid group name: group names must begin with a word character and have a matching terminator", this.src, open);
 		}
 		this.pos++; // closer
 
@@ -498,7 +511,7 @@ class Parser {
 		}
 
 		if (!saw) {
-			throw new PatternError("unrecognized group", this.src, open);
+			throw new PatternError(`unrecognized grouping construct: (?${this.src.slice(this.pos, this.pos + 1)}`, this.src, open);
 		}
 
 		if (this.peek() === ":") {
@@ -519,7 +532,12 @@ class Parser {
 
 	private expect(ch: string, open: number): void {
 		if (this.peek() !== ch) {
-			throw new PatternError(`expected \`${ch}\``, this.src, open);
+			// Only ever a `)`: a group that never closes.
+			throw new PatternError(
+				ch === ")" ? "missing closing )" : `missing closing ${ch}`,
+				this.src,
+				open,
+			);
 		}
 		this.pos++;
 	}
@@ -530,7 +548,7 @@ class Parser {
 		const start = this.pos;
 		this.pos++; // `\`
 		if (this.eof()) {
-			throw new PatternError("trailing backslash", this.src, start);
+			throw new PatternError(String.raw`illegal \ at end of pattern`, this.src, start);
 		}
 		const c = this.src[this.pos++]!;
 
@@ -597,7 +615,7 @@ class Parser {
 			let name = "";
 			while (!this.eof() && this.peek() !== "}") name += this.src[this.pos++];
 			if (this.eof()) {
-				throw new PatternError("unterminated `\\p{`", this.src, start);
+				throw new PatternError(String.raw`incomplete \p{X} character escape`, this.src, start);
 			}
 			this.pos++;
 			let neg = negated;
@@ -614,7 +632,7 @@ class Parser {
 		// RE2/PCRE's one-letter form: `\pL`.
 		const letter = this.src[this.pos++] ?? "";
 		if (letter === "") {
-			throw new PatternError("`\\p` needs a class name", this.src, start);
+			throw new PatternError(String.raw`malformed \p{X} character escape`, this.src, start);
 		}
 		return {
 			kind: "class",
@@ -708,7 +726,7 @@ class Parser {
 
 		for (;;) {
 			if (this.eof()) {
-				throw new PatternError("unterminated character class", this.src, open);
+				throw new PatternError("unterminated [] set", this.src, open);
 			}
 			if (this.peek() === "]") {
 				this.pos++;
@@ -761,7 +779,11 @@ class Parser {
 					continue;
 				}
 				if (hi < lo) {
-					throw new PatternError("reversed range", this.src, dash);
+					throw new PatternError(
+						`[${String.fromCodePoint(lo)}-${String.fromCodePoint(hi)}] range in reverse order`,
+						this.src,
+						dash,
+					);
 				}
 				cls.items.push({ type: "range", from: lo, to: hi });
 				continue;

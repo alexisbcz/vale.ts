@@ -3,8 +3,8 @@ import { ValeError } from "@vale-ts/core";
 import {
 	checkExpression,
 	evalMath,
-	measuredScope,
 	Metric,
+	measuredScope,
 	round,
 	ruleError,
 	TENGO_TIMEOUT_MS,

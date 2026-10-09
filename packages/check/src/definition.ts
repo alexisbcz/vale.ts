@@ -16,12 +16,13 @@ import {
 	newE100,
 	newE201FromPosition,
 	newE201FromTarget,
+	parseLenientDocument,
 	termPattern,
 	toSentence,
 	type ValeError,
+	YAMLError,
 } from "@vale-ts/core";
 import { Regexp } from "@vale-ts/regex";
-import { parseDocument } from "yaml";
 import { fixAlert } from "./action.ts";
 import type { BaseCheck } from "./decode.ts";
 import { FieldError, Fields } from "./decode.ts";
@@ -230,7 +231,8 @@ export function vocabAccepts(
 	txt: string,
 	loc: readonly number[] | null,
 ): boolean {
-	return v !== null && v.accepts(word, txt, loc);
+	if (v === null) return false;
+	return v.accepts(word, txt, loc);
 }
 
 /** Whether `r` matches `s`; a rule with no exceptions has no pattern. */
@@ -610,10 +612,15 @@ export function checkScopes(scopes: readonly string[], path: string): void {
 
 /** The YAML reading, kept apart so the error positions stay in one place. */
 function parseYAMLDefinition(file: string, path: string): BaseCheck {
-	const doc = parseDocument(file);
-	if (doc.errors.length > 0) {
-		const first = doc.errors[0]!;
-		throw newE201FromPosition(first.message, path, lineOf(file, first.pos[0]));
+	// Lenient, because `yaml.v3` is: a rule in Vale's own corpus repeats a swap
+	// key, and another writes `\'` inside a double-quoted scalar. Refusing
+	// either would mean a style that works under Vale fails here.
+	let doc: ReturnType<typeof parseLenientDocument>;
+	try {
+		doc = parseLenientDocument(file);
+	} catch (err) {
+		if (!(err instanceof YAMLError)) throw err;
+		throw newE201FromPosition(err.message, path, err.line);
 	}
 	const value = doc.toJS({ maxAliasCount: 100 }) as unknown;
 	if (value === null || value === undefined) return {};

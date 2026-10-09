@@ -4,8 +4,8 @@ import { join } from "node:path";
 import { ACTION_DIR, type Action, newAlert } from "@vale-ts/core";
 import {
 	checkAction,
-	editSteps,
 	Existence,
+	editSteps,
 	fixAlert,
 	Manager,
 	newDefinition,
@@ -40,7 +40,11 @@ describe("checkAction", () => {
 		],
 		["suggest script", { name: "suggest", params: ["Present.tengo"] }, ""],
 		["suggest spellings", { name: "suggest", params: ["spellings"] }, ""],
-		["suggest bare", { name: "suggest", params: [] }, "'suggest' takes one parameter"],
+		[
+			"suggest bare",
+			{ name: "suggest", params: [] },
+			"'suggest' takes one parameter",
+		],
 		[
 			"suggest missing",
 			{ name: "suggest", params: ["Absent.tengo"] },

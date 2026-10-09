@@ -29,17 +29,17 @@ import {
 	formatMessages,
 	IGNORE_CASE,
 	makeRegexp,
+	type Rule,
 	re2Loc,
 	readDefinition,
 	readStructureError,
-	type Rule,
 	TOKEN_TEMPLATE,
 } from "./definition.ts";
 import { recase } from "./matchcase.ts";
 import { patternError } from "./pattern-error.ts";
 import { tokensWith } from "./tokens.ts";
-import { intInSlice } from "./util.ts";
 import { uposTagPattern, uposWordPattern } from "./upos.ts";
+import { intInSlice } from "./util.ts";
 
 /** One position in a sequence, with its NLP-related attributes. */
 export interface NLPToken {

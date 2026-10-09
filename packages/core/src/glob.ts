@@ -218,7 +218,8 @@ function readClass(pattern: string, i: number): { source: string; next: number }
 		if (c === "]") {
 			// A class cannot be empty, and `[]` is not one.
 			if (body === "") {
-				throw new Error(`invalid glob '${pattern}': empty character class`);
+				// `gobwas/glob` reads the `]` as text and then runs out of input.
+				throw new Error("unexpected end of input");
 			}
 			return {
 				source: `[${negated ? "^" : ""}${body}]`,
@@ -248,13 +249,15 @@ function readClass(pattern: string, i: number): { source: string; next: number }
 		}
 		if (c === "-" && body !== "") {
 			if (afterRange) {
-				throw new Error(
-					`invalid glob '${pattern}': expected the character class to close after a range`,
-				);
+				// `gobwas/glob` consumes a range's upper bound and then requires
+				// the class to close, so anything else here is this error.
+				throw new Error("expected close range character");
 			}
 			const hi = pattern[j + 1];
 			if (hi === "]" && j === start + 1) {
-				throw new Error(`invalid glob '${pattern}': a range needs an upper bound`);
+				// `[a-]` reads the `]` as the range's upper bound, so the class
+				// never closes and whatever follows is not the `]` it wants.
+				throw new Error("expected close range character");
 			}
 			if (hi !== undefined && hi !== "]") {
 				body += "-";
@@ -272,7 +275,7 @@ function readClass(pattern: string, i: number): { source: string; next: number }
 		afterRange = pattern[j - 1] === "-" && j - 1 > start;
 	}
 
-	throw new Error(`invalid glob '${pattern}': unterminated character class`);
+	throw new Error("unexpected end of input");
 }
 
 const POSIX: Record<string, string> = {

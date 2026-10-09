@@ -10,10 +10,15 @@
  * this port: `vale test` is the only thing that reads these files.
  */
 
-import { isTestFile, newE201FromPosition, walk } from "@vale-ts/core";
+import {
+	isTestFile,
+	newE201FromPosition,
+	parseLenient,
+	walk,
+	YAMLError,
+} from "@vale-ts/core";
 import { readFileSync, statSync } from "node:fs";
 import * as path from "node:path";
-import { parse as parseYAML } from "yaml";
 
 /** One document and what linting it must produce. */
 export interface Case {
@@ -123,15 +128,36 @@ function readCase(raw: unknown, file: string, defaultRule: string): Case {
 const RULE_KEY = /^extends:/m;
 const TESTS_KEY = /^tests:/m;
 
+/**
+ * go-yaml's wording for the parse errors a rule's cases actually hit.
+ *
+ * The two parsers diagnose the same mistakes and name them differently, and
+ * the one people hit -- an unquoted `input: Note: this` -- has an answer in
+ * Vale's own documentation under go-yaml's wording. Anything not listed keeps
+ * the message the parser gave, which is the honest thing to show.
+ */
+const YAML_MESSAGES: Record<string, string> = {
+	"Nested mappings are not allowed in compact mappings":
+		"mapping values are not allowed in this context",
+	"Implicit keys need to be on a single line":
+		"mapping values are not allowed in this context",
+};
+
 /** Places a YAML error at the line the parser names. */
 function yamlError(file: string, err: unknown): Error {
-	const at = (err as { linePos?: Array<{ line: number }> }).linePos;
-	const line = at?.[0]?.line ?? 1;
-	const msg = err instanceof Error ? err.message : String(err);
+	const line = err instanceof YAMLError ? err.line : 1;
+	const raw = err instanceof Error ? err.message : String(err);
 
-	// The `yaml` parser puts the position in the message; the line is carried
-	// separately here, so it is taken off the front.
-	return newE201FromPosition(msg.replace(/ at line \d+, column \d+:[\s\S]*$/, ""), file, line);
+	// The parser puts the position and an excerpt in the message; the line is
+	// carried separately, so both are taken off the end.
+	const stripped = raw.replace(/ at line \d+, column \d+:[\s\S]*$/, "");
+
+	return newE201FromPosition(goYAMLMessage(stripped), file, line);
+}
+
+/** The go-yaml wording for a message, when one is known. */
+function goYAMLMessage(msg: string): string {
+	return YAML_MESSAGES[msg] ?? msg;
 }
 
 /**
@@ -150,7 +176,7 @@ export function loadCases(file: string): Case[] {
 	if (isTestFile(path.basename(file))) {
 		let parsed: unknown;
 		try {
-			parsed = parseYAML(body);
+			parsed = parseLenient(body);
 		} catch (err) {
 			throw yamlError(file, err);
 		}
@@ -163,7 +189,7 @@ export function loadCases(file: string): Case[] {
 
 	let rule: { extends?: unknown; tests?: unknown };
 	try {
-		rule = (parseYAML(body) ?? {}) as { extends?: unknown; tests?: unknown };
+		rule = (parseLenient(body) ?? {}) as { extends?: unknown; tests?: unknown };
 	} catch (err) {
 		// A rule carrying cases that does not parse is a mistake in it -- an
 		// unquoted `input: Note: this`, say -- and skipping it would drop its

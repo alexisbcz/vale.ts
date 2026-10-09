@@ -13,9 +13,9 @@ import {
 	fillTemplate,
 	makeAlert,
 	makeRegexp,
+	type Rule,
 	readDefinition,
 	readStructureError,
-	type Rule,
 } from "./definition.ts";
 import { patternError } from "./pattern-error.ts";
 import { allStringsInSlice } from "./util.ts";
@@ -74,10 +74,7 @@ export class Consistency implements Rule {
 			const v2 = this.either[v1]!;
 			count += 2;
 
-			const subs: [string, string] = [
-				`${chkKey}${count}`,
-				`${chkKey}${count + 1}`,
-			];
+			const subs: [string, string] = [`${chkKey}${count}`, `${chkKey}${count + 1}`];
 
 			const chkRE = fillTemplate(
 				template,

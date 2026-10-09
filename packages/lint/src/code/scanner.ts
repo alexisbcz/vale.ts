@@ -38,7 +38,7 @@ export function scanComments(source: string, lang: Language): Comment[] {
 		const line = lines[i];
 
 		if (block !== null) {
-			const end = delims.blockEnd.exec(line);
+			const end = matchOf(delims.blockEnd, line);
 			if (end === null) {
 				block.push(line);
 				continue;
@@ -49,14 +49,14 @@ export function scanComments(source: string, lang: Language): Comment[] {
 			continue;
 		}
 
-		const start = delims.blockStart.exec(line);
-		const inline = delims.inline.exec(line);
+		const start = matchOf(delims.blockStart, line);
+		const inline = matchOf(delims.inline, line);
 
 		// Whichever opens first on the line wins: `# a note` is a line comment
 		// even in a language whose block opener also begins with `#`.
 		if (start !== null && (inline === null || start.index <= inline.index)) {
 			const after = line.slice(start.index + start[0].length);
-			const end = delims.blockEnd.exec(after);
+			const end = matchOf(delims.blockEnd, after);
 			if (end !== null) {
 				// Opened and closed on one line.
 				const stop =
@@ -80,4 +80,18 @@ export function scanComments(source: string, lang: Language): Comment[] {
 	if (block !== null) emit(block.join("\n"), blockRow, blockCol);
 
 	return found;
+}
+
+/**
+ * The first non-empty match of `re` in `line`, or null.
+ *
+ * A language with no block comments names `$^` as its delimiters, which no
+ * line can hold -- except an empty one, where the start and the end of the
+ * line are the same position and the pattern matches "". Requiring a match to
+ * have a width is what keeps every blank line from opening a comment, and is
+ * what Go's `len(match) > 0` does.
+ */
+function matchOf(re: RegExp, line: string): RegExpExecArray | null {
+	const m = re.exec(line);
+	return m === null || m[0].length === 0 ? null : m;
 }

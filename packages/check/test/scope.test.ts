@@ -9,8 +9,8 @@ import {
 	expandScopes,
 	newScope,
 	newSelector,
-	scopeBases,
 	Selector,
+	scopeBases,
 	splitOutside,
 	standardSelector,
 } from "../src/index.ts";

@@ -11,8 +11,8 @@ import {
 	type Action,
 	type Alert,
 	type Block,
-	capFirst,
 	type Config,
+	capFirst,
 	type File,
 	literalTerm,
 	newE201FromTarget,
@@ -35,10 +35,10 @@ import {
 	isMatch,
 	makeRegexp,
 	matchToken,
+	type Rule,
 	re2Loc,
 	readDefinition,
 	readStructureError,
-	type Rule,
 	updateExceptions,
 	vocabAccepts,
 	vocabFor,
@@ -130,9 +130,8 @@ export class Substitution implements Rule {
 			this.msgMap.push(term);
 			const replacement = this.swap[term]!;
 
-			let regexstr = shared !== "" && term.startsWith(shared)
-				? term.slice(shared.length)
-				: term;
+			let regexstr =
+				shared !== "" && term.startsWith(shared) ? term.slice(shared.length) : term;
 
 			const opens = count(regexstr, "(");
 			if (opens !== count(regexstr, "(?") + count(regexstr, "\\(")) {
@@ -249,11 +248,7 @@ export class Substitution implements Rule {
 					a.action = action;
 					if (action.name === "replace") {
 						a.suggestions = action.params;
-					} else if (
-						this.terms &&
-						expected !== observed &&
-						literalTerm(expected)
-					) {
+					} else if (this.terms && expected !== observed && literalTerm(expected)) {
 						a.action = {
 							name: "replace",
 							params: [keepWrap(expected, observed)],
@@ -325,10 +320,7 @@ export function sharedLookaround(terms: readonly string[]): string {
 	if (terms.length < 2) return "";
 
 	const lead = leadingGroup(terms[0]!);
-	if (
-		lead === "" ||
-		count(lead, "(") !== count(lead, "(?") + count(lead, "\\(")
-	) {
+	if (lead === "" || count(lead, "(") !== count(lead, "(?") + count(lead, "\\(")) {
 		return "";
 	}
 
@@ -407,10 +399,7 @@ export function expandPattern(pattern: string): string[] | null {
 	const runes = [...pattern];
 
 	/** Reads an alternation at `i`, returning its spellings and where it ended. */
-	const parse = (
-		start: number,
-		nested: boolean,
-	): [string[], number, boolean] => {
+	const parse = (start: number, nested: boolean): [string[], number, boolean] => {
 		const branches: string[] = [];
 		let current: string[] = [""];
 		let i = start;

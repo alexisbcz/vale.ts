@@ -6,8 +6,8 @@ import {
 	getOptions,
 	keepWrap,
 	recaseToTerm,
-	sharedLookaround,
 	Substitution,
+	sharedLookaround,
 } from "../src/index.ts";
 import { testConfig, testFile } from "./helpers.ts";
 
@@ -82,7 +82,11 @@ describe("sharedLookaround", () => {
 		["one term", [String.raw`(?<=have\s)went\b`], ""],
 		["no assertion", [String.raw`went\b`, String.raw`ate\b`], ""],
 		["not leading", ["a(?=b)", "a(?=c)"], ""],
-		["capturing", [String.raw`(?<=(have)\s)went`, String.raw`(?<=(have)\s)ate`], ""],
+		[
+			"capturing",
+			[String.raw`(?<=(have)\s)went`, String.raw`(?<=(have)\s)ate`],
+			"",
+		],
 		[
 			"escaped paren inside",
 			[String.raw`(?<=\)\s)went`, String.raw`(?<=\)\s)ate`],
@@ -123,9 +127,9 @@ test("hoisting a lookaround keeps each term's replacement", () => {
 	}
 
 	// The assertion still has to hold once hoisted.
-	expect(
-		rule.run(placed("they went home"), testFile(), testConfig()).length,
-	).toBe(0);
+	expect(rule.run(placed("they went home"), testFile(), testConfig()).length).toBe(
+		0,
+	);
 });
 
 // TODO: `@vale-ts/regex` cannot compile a quantified lookaround -- `(?!\))?`

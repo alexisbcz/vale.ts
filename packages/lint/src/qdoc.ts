@@ -602,6 +602,19 @@ class Converter {
 			if (rest !== "") this.para.push(rest);
 			return;
 		}
+		if (
+			name.startsWith("section") &&
+			name.length === 8 &&
+			name[7] >= "1" &&
+			name[7] <= "4"
+		) {
+			// `\section1` is the first level *under* the page's title, so it is
+			// an `h2`; the title itself is the `h1`.
+			this.closeDiv();
+			const level = Number(name[7]) + 1;
+			this.html += `<h${level}>${qdocInline(rest)}</h${level}>\n`;
+			return;
+		}
 
 		switch (name) {
 			case "title":

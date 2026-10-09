@@ -42,3 +42,24 @@ export function withTempDir<T>(body: (dir: string) => T): T {
 		rmSync(dir, { recursive: true, force: true });
 	}
 }
+
+/**
+ * A scratch directory that is also the working directory while `body` runs.
+ *
+ * The working directory is restored before the directory is removed: a `cwd`
+ * that no longer exists breaks every test that follows, however the one that
+ * made it failed.
+ */
+export async function inTempDir(
+	body: (dir: string) => Promise<void> | void,
+): Promise<void> {
+	const dir = mkdtempSync(path.join(tmpdir(), "vale-cli-test-"));
+	const cwd = process.cwd();
+	try {
+		process.chdir(dir);
+		await body(dir);
+	} finally {
+		process.chdir(cwd);
+		rmSync(dir, { recursive: true, force: true });
+	}
+}

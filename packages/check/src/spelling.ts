@@ -21,10 +21,10 @@ import {
 import { tokenizeWordsWithOffsets } from "@vale-ts/nlp";
 import { Regexp } from "@vale-ts/regex";
 import {
-	Checker,
+	type Checker,
 	newChecker,
-	similarity,
 	type Suggestion,
+	similarity,
 	usingDictionary,
 	usingDictionaryByPath,
 	withDefault,
@@ -39,9 +39,9 @@ import {
 	formatMessages,
 	IGNORE_CASE,
 	isMatch,
+	type Rule,
 	readDefinition,
 	readStructureError,
-	type Rule,
 	vocabAccepts,
 	vocabFor,
 } from "./definition.ts";
@@ -271,7 +271,10 @@ export class Spelling implements Rule {
 				const parts = splitIdentifier(found);
 				if (parts.length !== 1 || parts[0]!.text !== found) {
 					for (const part of parts) {
-						if (this.checkPart(part.text) || vocabAccepts(vocab, part.text, "", null)) {
+						if (
+							this.checkPart(part.text) ||
+							vocabAccepts(vocab, part.text, "", null)
+						) {
 							continue;
 						}
 						const a = this.alert(part.text, offset + part.at, part.text.length);
@@ -331,9 +334,7 @@ export class Spelling implements Rule {
 			if (/\p{L}/u.test(r)) letters++;
 		}
 		if (letters < MIN_PART_LETTERS || part.toUpperCase() === part) return true;
-		return (
-			this.gs.spell(this.gs.convert(part)) || isMatch(this.exceptRe, part)
-		);
+		return this.gs.spell(this.gs.convert(part)) || isMatch(this.exceptRe, part);
 	}
 
 	/** Reports a misspelling at a position in the block. */
@@ -366,12 +367,7 @@ export class Spelling implements Rule {
 	 * fix that is certain: the dictionary spells it in another case, or it is
 	 * shaped like an identifier in a format with inline code.
 	 */
-	private explain(
-		a: Alert,
-		word: string,
-		found: string,
-		f: File | null,
-	): void {
+	private explain(a: Alert, word: string, found: string, f: File | null): void {
 		const cased = this.gs.recase(word);
 		if (cased !== null && certainRecase(word, cased)) {
 			a.message = `Use '${cased}' instead of '${found}'.`;
@@ -503,10 +499,7 @@ export function certainRecase(word: string, cased: string): boolean {
 	};
 	const inner = [...cased].slice(1).some((r) => /\p{Lu}/u.test(r));
 	return (
-		[...word].length >= 3 &&
-		upper(word) <= 1 &&
-		upper(cased) > upper(word) &&
-		inner
+		[...word].length >= 3 && upper(word) <= 1 && upper(cased) > upper(word) && inner
 	);
 }
 

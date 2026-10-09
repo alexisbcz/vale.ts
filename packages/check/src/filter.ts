@@ -8,12 +8,7 @@
  */
 
 import { readFileSync } from "node:fs";
-import {
-	compileExpr,
-	findAsset,
-	fileExists,
-	LEVEL_TO_INT,
-} from "@vale-ts/core";
+import { compileExpr, fileExists, findAsset, LEVEL_TO_INT } from "@vale-ts/core";
 import type { Definition, Rule } from "./definition.ts";
 import type { Manager } from "./manager.ts";
 

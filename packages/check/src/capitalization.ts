@@ -14,15 +14,15 @@ import {
 	formatMessages,
 	isMatch,
 	makeAlert,
+	type Rule,
 	readDefinition,
 	readStructureError,
-	type Rule,
 	updateExceptions,
 } from "./definition.ts";
 import { patternError } from "./pattern-error.ts";
 import {
-	chicagoStyle,
 	apStyle,
+	chicagoStyle,
 	SentenceConverter,
 	TitleConverter,
 } from "./strcase.ts";

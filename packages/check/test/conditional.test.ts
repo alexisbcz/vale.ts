@@ -34,11 +34,8 @@ test("an abbreviation defined parenthetically is accepted", () => {
 
 	const f = testFile();
 	expect(
-		rule.run(
-			block("World Health Organization (WHO) says WHO.", "text"),
-			f,
-			cfg,
-		).length,
+		rule.run(block("World Health Organization (WHO) says WHO.", "text"), f, cfg)
+			.length,
 	).toBe(0);
 
 	const g = testFile();

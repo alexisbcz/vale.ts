@@ -56,6 +56,16 @@ export function banner(e: ValeError): string {
 	);
 }
 
+/**
+ * An error as text, which for Vale's own is the banner.
+ *
+ * Go gets this from `error.Error()`, so anywhere it prints an error -- a test
+ * case that could not run, say -- the whole banner lands there.
+ */
+export function renderError(err: unknown): string {
+	return err instanceof ValeError ? banner(err) : messageOf(err);
+}
+
 /** Writes `err` in the user-specified format. */
 export function showError(err: unknown, style: string, out: Writer): void {
 	const ve = asValeError(err);
@@ -88,8 +98,6 @@ export function showError(err: unknown, style: string, out: Writer): void {
 		}
 		default:
 			// A plain error prints its own message; Vale's prints the banner.
-			out(
-				`${err instanceof ValeError ? banner(err) : messageOf(err)}\n`,
-			);
+			out(`${renderError(err)}\n`);
 	}
 }

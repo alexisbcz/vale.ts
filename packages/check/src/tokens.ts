@@ -14,7 +14,7 @@
  */
 
 import type { File } from "@vale-ts/core";
-import { textToTokensWith, type Token, TokenCache } from "@vale-ts/nlp";
+import { type Token, TokenCache, textToTokensWith } from "@vale-ts/nlp";
 
 const caches = new WeakMap<File, TokenCache>();
 

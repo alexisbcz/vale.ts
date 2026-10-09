@@ -72,9 +72,7 @@ test("an accepted phrase suppresses a match on one of its words", () => {
 	const cfg = testConfig();
 	cfg.acceptedTokens = ["mea culpa"];
 	const rule = new Existence(cfg, { tokens: ["mea"] }, "");
-	expect(rule.run(block("A mea culpa follows."), testFile(), cfg).length).toBe(
-		0,
-	);
+	expect(rule.run(block("A mea culpa follows."), testFile(), cfg).length).toBe(0);
 	expect(rule.run(block("A mea of sorts."), testFile(), cfg).length).toBe(1);
 });
 

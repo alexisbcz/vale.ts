@@ -43,7 +43,11 @@ describe("a repeated word is reported", () => {
 
 test("the alert names the repeated word and suggests the single one", () => {
 	const rule = makeRepetition();
-	const alerts = rule.run(block("This is is a test.", "text"), testFile(), testConfig());
+	const alerts = rule.run(
+		block("This is is a test.", "text"),
+		testFile(),
+		testConfig(),
+	);
 	expect(alerts.length).toBe(1);
 	expect(alerts[0]!.message).toBe("'is' is repeated!");
 	expect(alerts[0]!.suggestions).toEqual(["is"]);

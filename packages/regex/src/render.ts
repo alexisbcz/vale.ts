@@ -530,7 +530,7 @@ class Renderer {
 		const mapped = translateProperty(name);
 		if (mapped === null) {
 			throw new PatternError(
-				`unknown Unicode class \`${name}\``,
+				`unknown unicode category, script, or property '${name}'`,
 				this.opts.source,
 				0,
 			);

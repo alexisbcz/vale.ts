@@ -33,7 +33,9 @@ const UPOS_TAGS: Record<string, string> = {
 	PART: String.raw`TO|RP|POS`,
 	PRON: String.raw`PRP|PRP\$|WP|EX`,
 	PROPN: String.raw`NNP|NNPS`,
-	PUNCT: String.raw`[.,:]|''|` + "``" + String.raw`|-LRB-|-RRB-|\(|\)`,
+	// Written with ordinary escapes rather than a raw string, which cannot
+	// hold the backtick pair Penn uses for an opening quotation mark.
+	PUNCT: "[.,:]|''|``|-LRB-|-RRB-|\\(|\\)",
 	SCONJ: String.raw`IN|WRB`,
 	SYM: String.raw`SYM|\$|#`,
 	VERB: String.raw`VB|VBD|VBG|VBN|VBP|VBZ`,

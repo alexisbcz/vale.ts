@@ -2,8 +2,8 @@ import { describe, expect, test } from "bun:test";
 import { newAlert } from "@vale-ts/core";
 import {
 	cardinalWords,
-	expandGroups,
 	Existence,
+	expandGroups,
 	fixAlert,
 	numberToWords,
 	parseAlert,
@@ -40,11 +40,7 @@ describe("edit operations", () => {
 			"He said “it’s fine” – really…",
 		],
 		["'quoted' --- yes", ["smart"], "‘quoted’ — yes"],
-		[
-			"He said “it’s fine” – really…",
-			["dumb"],
-			`He said "it's fine" -- really...`,
-		],
+		["He said “it’s fine” – really…", ["dumb"], `He said "it's fine" -- really...`],
 		["“Crème brûlée” — naïve", ["ascii"], `"Creme brulee" --- naive`],
 		["Æsop, Straße, Øresund", ["ascii"], "AEsop, Strasse, Oresund"],
 		["21", ["words"], "twenty-one"],
@@ -81,8 +77,21 @@ describe("edit operations", () => {
 
 test("numbers round-trip through words", () => {
 	const values = [
-		0n, 5n, 13n, 20n, 47n, 99n, 100n, 101n, 999n, 1000n, 1001n, 12345n,
-		1_000_000n, 2_000_001n, 1_000_000_000_000n,
+		0n,
+		5n,
+		13n,
+		20n,
+		47n,
+		99n,
+		100n,
+		101n,
+		999n,
+		1000n,
+		1001n,
+		12345n,
+		1_000_000n,
+		2_000_001n,
+		1_000_000_000_000n,
 	];
 	for (const n of values) {
 		const digits = wordsToNumber(cardinalWords(n));

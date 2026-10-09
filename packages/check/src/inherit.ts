@@ -190,11 +190,7 @@ export function overlay(
 }
 
 /** Applies one `key+` or `key-` operation to a parent's value. */
-export function editField(
-	parent: unknown,
-	value: unknown,
-	key: string,
-): unknown {
+export function editField(parent: unknown, value: unknown, key: string): unknown {
 	const add = key.endsWith("+");
 
 	if (Array.isArray(parent)) {
@@ -261,12 +257,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
 	if (Array.isArray(a) && Array.isArray(b)) {
 		return a.length === b.length && a.every((x, i) => deepEqual(x, b[i]));
 	}
-	if (
-		a !== null &&
-		b !== null &&
-		typeof a === "object" &&
-		typeof b === "object"
-	) {
+	if (a !== null && b !== null && typeof a === "object" && typeof b === "object") {
 		const ka = Object.keys(a as object);
 		const kb = Object.keys(b as object);
 		if (ka.length !== kb.length) return false;

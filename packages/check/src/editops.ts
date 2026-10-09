@@ -279,10 +279,10 @@ const NUMBER_WORDS: Map<string, NumberWord> = (() => {
 		words.set(word, { value, ordinal: false });
 		words.set(ordinalWord(word), { value, ordinal: true });
 	};
-	ONES.forEach((w, i) => add(w, BigInt(i)));
-	TENS.forEach((w, i) => {
-		if (w !== "") add(w, BigInt(i * 10));
-	});
+	for (let i = 0; i < ONES.length; i++) add(ONES[i]!, BigInt(i));
+	for (let i = 0; i < TENS.length; i++) {
+		if (TENS[i] !== "") add(TENS[i]!, BigInt(i * 10));
+	}
 	add("hundred", 100n);
 	for (const [value, name] of SCALES) add(name, value);
 	return words;

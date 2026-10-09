@@ -18,10 +18,7 @@ tests:
     contains: parent
 `;
 
-function flattenChild(
-	files: Record<string, string>,
-	body: string,
-): BaseCheck {
+function flattenChild(files: Record<string, string>, body: string): BaseCheck {
 	const sp = withStyles(files);
 	const cfg = testConfig();
 	cfg.addStylesPath(sp);
@@ -80,7 +77,11 @@ swap-:
 
 describe("what inheritance refuses", () => {
 	const cases: Array<[string, string, string]> = [
-		["missing parent", "extends: Base.Missing\n", "does not exist on the search path"],
+		[
+			"missing parent",
+			"extends: Base.Missing\n",
+			"does not exist on the search path",
+		],
 		["builtin parent", "extends: Vale.Terms\n", "generated at runtime"],
 		[
 			"remove absent entry",

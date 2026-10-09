@@ -24,9 +24,16 @@
  *
  * An alert is placed by searching the source for its text, and a JSX tag is
  * the one piece of source the walker never sees -- so its attributes are
- * still there to be found unless they are blanked. The tags' ranges are
- * collected while parsing and masked out of the file's text before the walker
- * runs.
+ * still there to be found unless they are blanked.
+ *
+ * The tags are found by a scan of their own (`jsxTagSpans`) rather than
+ * collected while parsing. Go collects them from the parsed tree, which it can
+ * because goldmark's nodes carry ranges into the source; markdown-it parses
+ * inline content out of a detached string, so an inline rule has no way to say
+ * where in the document it is. A tag is exactly what `opensJsx` and `tagEnd`
+ * recognize, so looking for them directly finds the same ranges -- a code
+ * fence aside, whose contents the walker skips anyway and which the scan
+ * therefore steps over.
  *
  * # Indentation
  *
@@ -61,8 +68,6 @@ export type Span = [number, number];
 
 /** What a parse records on the side. */
 interface MDXEnv {
-	/** The ranges of the JSX tags, which the walker never sees. */
-	mdxSpans?: Span[];
 	/** Where the first block the document left open began, and what it was. */
 	mdxUnclosed?: { offset: number; what: string };
 }
@@ -523,6 +528,56 @@ export function className(name: string): string {
 	return name.replaceAll(".", "-");
 }
 
+/**
+ * The source ranges of the JSX tags in `content`.
+ *
+ * A fenced code block is stepped over: what is inside one is not JSX, and the
+ * walker skips it in any case. Everything else is scanned straight through, so
+ * a tag that spans lines is found whole.
+ */
+export function jsxTagSpans(content: string): Span[] {
+	const spans: Span[] = [];
+	const lines = content.split("\n");
+
+	let at = 0;
+	let fenced = false;
+
+	for (const line of lines) {
+		const trimmed = line.trim();
+		if (trimmed.startsWith("```") || trimmed.startsWith("~~~")) {
+			fenced = !fenced;
+			at += line.length + 1;
+			continue;
+		}
+		if (fenced) {
+			at += line.length + 1;
+			continue;
+		}
+
+		for (let i = 0; i < line.length; i++) {
+			if (line[i] !== "<") continue;
+			if (!opensJsx(line, i)) continue;
+			// From the rest of the document, not the rest of the line: an open
+			// tag may carry its attributes over several lines.
+			const rest = content.slice(at + i);
+			const end = tagEnd(rest, new JsxScan());
+			if (end < 0) continue;
+			spans.push([at + i, at + i + end]);
+			if (at + i + end > at + line.length) {
+				// The tag ran past this line; the lines it covers are handled by
+				// the span, so the scan resumes after it.
+				i = line.length;
+			} else {
+				i += end - 1;
+			}
+		}
+
+		at += line.length + 1;
+	}
+
+	return spans;
+}
+
 /** Blanks the given ranges of `content`, character for character, keeping newlines. */
 export function maskSpans(content: string, spans: readonly Span[]): string {
 	if (spans.length === 0) return content;
@@ -544,11 +599,6 @@ function rawLine(state: StateBlock, line: number): string {
 
 function envOf(state: { env: unknown }): MDXEnv {
 	return state.env as MDXEnv;
-}
-
-function addSpan(state: { env: unknown }, span: Span): void {
-	const env = envOf(state);
-	(env.mdxSpans ??= []).push(span);
 }
 
 /**
@@ -701,21 +751,17 @@ function mdxJsxFlow(
 
 	if (silent) return true;
 
-	const spans: Span[] = [];
 	let name: string;
 	let open = startLine;
 
 	if (end < 0) {
 		// The open tag itself spans lines.
-		spans.push([begin + pos, state.eMarks[startLine]]);
+		scan.scan(first.slice(pos));
 		let line = startLine + 1;
-		let reach = -1;
 		for (; line < endLine; line++) {
 			const text = rawLine(state, line);
-			reach = tagEnd(text, scan);
-			if (reach < 0) {
+			if (tagEnd(text, scan) < 0) {
 				scan.scan(text);
-				spans.push([state.bMarks[line], state.eMarks[line]]);
 				continue;
 			}
 			break;
@@ -723,31 +769,25 @@ function mdxJsxFlow(
 
 		if (line >= endLine) {
 			// The tag never ends.
-			noteUnclosed(state, spans[0][0], "the tag opened here never ends");
-			for (const s of spans) addSpan(state, s);
+			noteUnclosed(state, begin + pos, "the tag opened here never ends");
 			state.line = endLine;
 			return true;
 		}
 
-		spans.push([state.bMarks[line], state.eMarks[line]]);
 		if (scan.done) {
 			// Childless after all: a multiline self-closing element. It is tags
-			// and nothing else, so it renders as nothing -- its source is
-			// masked out of the search context, and the walker must not then
-			// look for it there.
-			for (const s of spans) addSpan(state, s);
+			// and nothing else, so it renders as nothing, like a container's
+			// tags: its source is masked out of the search context, and the
+			// walker must not then look for it there -- which moved every later
+			// match and lost the alerts whose words the element also held.
 			state.line = line + 1;
 			return true;
 		}
 
 		name = scan.stack[scan.stack.length - 1];
-		// The span covers the open tag only; what follows it on the line is
-		// tags and expressions, which render as nothing.
-		spans[spans.length - 1] = [state.bMarks[line], state.bMarks[line] + reach];
 		open = line;
 	} else {
 		name = scan.stack[scan.stack.length - 1];
-		spans.push([begin + pos, begin + pos + end]);
 	}
 
 	// The element's children run to its matching close tag, counting
@@ -778,8 +818,6 @@ function mdxJsxFlow(
 	}
 
 	const last = close < 0 ? endLine : close;
-	if (close >= 0) spans.push([state.bMarks[close], state.eMarks[close]]);
-	for (const s of spans) addSpan(state, s);
 
 	const openToken = state.push("mdx_container_open", "div", 1);
 	openToken.block = true;
@@ -874,10 +912,6 @@ function mdxInline(state: StateInline, silent: boolean): boolean {
 		const token = state.push("mdx_inline", "span", 0);
 		token.content = text;
 		token.meta = { typ: "mdxJsxTextElement", form, name };
-
-		// A tag is the one piece of source the walker never sees, so its
-		// attributes are masked out of the search context.
-		if (form !== 0) addSpan(state, [start, start + used]);
 	}
 
 	state.pos = start + used;
@@ -1002,20 +1036,20 @@ export function lintMDX(host: MDXHost, f: File): void {
 	const tokens = sharedMDX.parse(src, env);
 	const html = sharedMDX.renderer.render(tokens, sharedMDX.options, env);
 
-	// The transform rewrites the front matter, so the ranges of the parsed
-	// text are not the file's; the file is parsed again for them.
-	let spanEnv = env;
-	let spanSrc = src;
-	if (src !== f.content) {
-		spanEnv = {};
-		spanSrc = f.content;
-		sharedMDX.parse(spanSrc, spanEnv);
-	}
-
 	const open = env.mdxUnclosed;
 	if (open !== undefined) {
-		const placed = spanEnv.mdxUnclosed ?? open;
-		const text = spanEnv.mdxUnclosed !== undefined ? spanSrc : src;
+		// The transform rewrites the front matter, so the offset of the block
+		// that never closed is not the file's; the file is parsed again for it.
+		let placed = open;
+		let text = src;
+		if (src !== f.content) {
+			const fileEnv: MDXEnv = {};
+			sharedMDX.parse(f.content, fileEnv);
+			if (fileEnv.mdxUnclosed !== undefined) {
+				placed = fileEnv.mdxUnclosed;
+				text = f.content;
+			}
+		}
 		const line = countNewlines(text.slice(0, placed.offset)) + 1;
 		throw newE201FromPosition(
 			`Invalid MDX: ${placed.what}, so the rest of the file can't be read.`,
@@ -1024,7 +1058,7 @@ export function lintMDX(host: MDXHost, f: File): void {
 		);
 	}
 
-	f.content = prepMarkdown(maskSpans(f.content, spanEnv.mdxSpans ?? []));
+	f.content = prepMarkdown(maskSpans(f.content, jsxTagSpans(f.content)));
 	host.lintHTMLTokens(f, html, 0);
 }
 

@@ -354,6 +354,14 @@ const BINARY_PRECEDENCE: Record<string, number> = {
 	"**": 8,
 };
 
+/** The operators that group to the right. */
+const RIGHT_ASSOCIATIVE = new Set(["**"]);
+
+/** Whether a token is the punctuation or operator spelled `value`. */
+function isSyntax(tok: Token, value: string): boolean {
+	return (tok.type === "punct" || tok.type === "operator") && tok.value === value;
+}
+
 class Parser {
 	private readonly tokens: Token[];
 	private pos = 0;
@@ -376,8 +384,16 @@ class Parser {
 		return this.tokens[this.pos++] ?? { type: "eof", value: "", at: 0 };
 	}
 
+	/**
+	 * Consumes a punctuation or operator token with this spelling.
+	 *
+	 * The token's *type* is part of the test: a string whose text happens to
+	 * be `-` or `(` is a value, not syntax, and matching it on spelling alone
+	 * made `join(["a"], "-")` parse its last argument as a unary minus.
+	 */
 	private eat(value: string): boolean {
-		if (this.peek().value === value) {
+		const tok = this.peek();
+		if (isSyntax(tok, value)) {
 			this.pos++;
 			return true;
 		}
@@ -407,7 +423,11 @@ class Parser {
 			if (precedence === undefined || precedence < minPrecedence) break;
 
 			this.pos++;
-			const right = this.parseExpression(precedence + 1);
+			// `**` is the one right-associative operator, so `2 ** 3 ** 2` is
+			// `2 ** (3 ** 2)`, as it is in `expr-lang`.
+			const right = this.parseExpression(
+				RIGHT_ASSOCIATIVE.has(op) ? precedence : precedence + 1,
+			);
 			left = { kind: "binary", op, left, right };
 		}
 
@@ -416,7 +436,10 @@ class Parser {
 
 	private parseUnary(): Node {
 		const tok = this.peek();
-		if (tok.value === "!" || tok.value === "-" || tok.value === "+") {
+		if (
+			tok.type === "operator" &&
+			(tok.value === "!" || tok.value === "-" || tok.value === "+")
+		) {
 			this.pos++;
 			return { kind: "unary", op: tok.value, operand: this.parseUnary() };
 		}
@@ -430,7 +453,7 @@ class Parser {
 	private parsePostfix(target: Node): Node {
 		let node = target;
 		for (;;) {
-			if (this.peek().value === "." || this.peek().value === "?.") {
+			if (isSyntax(this.peek(), ".") || isSyntax(this.peek(), "?.")) {
 				const optional = this.next().value === "?.";
 				const name = this.next();
 				if (name.type !== "identifier") {
@@ -439,7 +462,7 @@ class Parser {
 				node = { kind: "member", target: node, name: name.value, optional };
 				continue;
 			}
-			if (this.peek().value === "[") {
+			if (isSyntax(this.peek(), "[")) {
 				this.pos++;
 				const index = this.parseExpression(0);
 				this.expect("]");
@@ -460,15 +483,15 @@ class Parser {
 			return { kind: "literal", value: tok.value };
 		}
 
-		if (tok.value === "(") {
+		if (isSyntax(tok, "(")) {
 			const inner = this.parseExpression(0);
 			this.expect(")");
 			return inner;
 		}
 
-		if (tok.value === "[") {
+		if (isSyntax(tok, "[")) {
 			const items: Node[] = [];
-			if (this.peek().value !== "]") {
+			if (!isSyntax(this.peek(), "]")) {
 				do {
 					items.push(this.parseExpression(0));
 				} while (this.eat(","));
@@ -477,12 +500,15 @@ class Parser {
 			return { kind: "array", items };
 		}
 
-		if (tok.value === "{") {
+		if (isSyntax(tok, "{")) {
 			// A brace here is a closure body -- `any(Files, {.Ext == ".md"})` --
 			// unless it holds `key: value` pairs, which is a map literal. The
 			// closure form is the one Vale generates, so it is tried first.
 			const entries: Array<[string, Node]> = [];
-			if (this.peek().type === "identifier" && this.peek(1).value === ":") {
+			const keyed =
+				(this.peek().type === "identifier" || this.peek().type === "string") &&
+				isSyntax(this.peek(1), ":");
+			if (keyed) {
 				do {
 					const key = this.next();
 					this.expect(":");
@@ -496,7 +522,7 @@ class Parser {
 			return { kind: "closure", body };
 		}
 
-		if (tok.value === ".") {
+		if (isSyntax(tok, ".")) {
 			// A leading dot addresses the item under consideration, which is
 			// how both a section's condition and `--filter` are written.
 			const name = this.next();
@@ -519,10 +545,10 @@ class Parser {
 			}
 			if (tok.value === "#") return { kind: "pointer" };
 
-			if (this.peek().value === "(") {
+			if (isSyntax(this.peek(), "(")) {
 				this.pos++;
 				const args: Node[] = [];
-				if (this.peek().value !== ")") {
+				if (!isSyntax(this.peek(), ")")) {
 					do {
 						args.push(this.parseExpression(0));
 					} while (this.eat(","));

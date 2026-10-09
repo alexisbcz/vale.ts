@@ -130,6 +130,16 @@ function lexAction(src: string, where: string): Token[] {
 		if (ch === "$") {
 			let j = i + 1;
 			while (j < src.length && /[\w]/.test(src[j] as string)) j++;
+			// A variable carries its own field chain: `$.Name`, `$f.Path`.
+			while (src[j] === ".") {
+				j++;
+				const start = j;
+				while (j < src.length && /[\w]/.test(src[j] as string)) j++;
+				if (j === start) {
+					j--;
+					break;
+				}
+			}
 			tokens.push({ kind: "variable", text: src.slice(i, j) });
 			i = j;
 			continue;

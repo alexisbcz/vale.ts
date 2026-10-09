@@ -12,7 +12,7 @@
  * symbols. See `doc.ts`.
  */
 
-import { Parser, Query } from "web-tree-sitter";
+import { type Language as Grammar, Parser, Query } from "web-tree-sitter";
 import { leadingMask } from "./doc.ts";
 import { QueryEngine } from "./query.ts";
 import { scanComments } from "./scanner.ts";
@@ -120,21 +120,33 @@ export function coalesce(comments: readonly Comment[]): Comment[] {
 	return joined;
 }
 
-/** Each query compiled once per grammar; compiling is most of what one costs. */
-const compiled = new Map<string, Query>();
+/**
+ * Each query compiled once per grammar; compiling is most of what a query
+ * costs, and a notebook asks for the same one once per cell.
+ *
+ * Keyed by the grammar itself, not by its name: several languages share a
+ * query -- `(comment) @comment` is most of them -- and a query compiled
+ * against one grammar matches nothing when it is run over another's tree.
+ * `initCode` loads each grammar once, so the identity is stable for the
+ * process.
+ */
+const compiled = new WeakMap<Grammar, Map<string, Query>>();
 
 function compiledQuery(lang: Language, expr: string): Query {
 	const grammar = lang.grammar;
 	if (grammar === null) throw new Error("no grammar for this language");
 
-	// The grammar is the one `initCode` loaded, so its identity is stable for
-	// the process and the language name keys the cache.
-	const key = `${grammar.name ?? ""}\u0000${expr}`;
-	const hit = compiled.get(key);
+	let forGrammar = compiled.get(grammar);
+	if (forGrammar === undefined) {
+		forGrammar = new Map();
+		compiled.set(grammar, forGrammar);
+	}
+
+	const hit = forGrammar.get(expr);
 	if (hit !== undefined) return hit;
 
 	const query = new Query(grammar, expr);
-	compiled.set(key, query);
+	forGrammar.set(expr, query);
 	return query;
 }
 
@@ -162,8 +174,9 @@ export function getComments(source: string, lang: Language): Comment[] {
 			comments.sort((a, b) => a.line - b.line);
 		}
 
-		tree.delete();
-		parser.delete();
+		// The tree and the parser are left to the collector. Freeing the parser
+		// here took the WebAssembly module's parse entry point with it, and the
+		// next file to be read could not be parsed at all.
 	}
 
 	const joined = coalesce(dropDirectives(dropShebang(comments), lang));

@@ -12,20 +12,20 @@
 
 import { readFileSync } from "node:fs";
 import {
-	checkName,
 	type Config,
-	fileExists,
+	checkName,
 	type File,
+	fileExists,
 	getPackages,
 	isDir,
 	isTestFile,
 	joinPath,
+	type NLPInfo,
 	newE100,
 	newE201FromKey,
 	newE201FromPosition,
 	newE201FromTarget,
 	newNLPInfo,
-	type NLPInfo,
 	styleName,
 	termPattern,
 	walk,
@@ -270,11 +270,7 @@ export class Manager {
 	 * It reads the configuration but does not touch the manager's own state;
 	 * everything that writes to the manager is in `registerCheck`.
 	 */
-	compileCheck(
-		file: string,
-		chkName: string,
-		path: string,
-	): [Rule, boolean] {
+	compileCheck(file: string, chkName: string, path: string): [Rule, boolean] {
 		let generic = parseDefinition(file, path);
 
 		// An `extends` naming a rule rather than an extension point starts
@@ -513,9 +509,7 @@ export class Manager {
 	}
 
 	private hasStyle(name: string): boolean {
-		return (
-			stringInSlice(name, this.styles) || stringInSlice(name, DEFAULT_STYLES)
-		);
+		return stringInSlice(name, this.styles) || stringInSlice(name, DEFAULT_STYLES);
 	}
 
 	/**

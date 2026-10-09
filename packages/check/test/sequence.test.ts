@@ -73,7 +73,11 @@ describe("sentenceScope narrows a declared scope to its sentences", () => {
 		// `paragraph` names no block of its own: splitting wraps every block
 		// as `paragraph.<scope>`, so `sentence.paragraph` is built for nothing.
 		["paragraph is not narrowed further", ["paragraph"], ["sentence"]],
-		["a qualified paragraph keeps its qualifier", ["paragraph.md"], ["sentence.md"]],
+		[
+			"a qualified paragraph keeps its qualifier",
+			["paragraph.md"],
+			["sentence.md"],
+		],
 		[
 			"a scope merely starting with the word is left alone",
 			["paragraphs"],
@@ -209,11 +213,7 @@ describe("a negated token is satisfied at a sentence boundary", () => {
 		level: "warning",
 		ignorecase: true,
 		message: "matched",
-		tokens: [
-			{ tag: "CC", negate: true },
-			{ pattern: "dogs" },
-			{ pattern: "bark" },
-		],
+		tokens: [{ tag: "CC", negate: true }, { pattern: "dogs" }, { pattern: "bark" }],
 	});
 
 	const cases: Array<[string, string, number]> = [
@@ -238,11 +238,7 @@ describe("the same vacuous truth applies on the right", () => {
 		level: "warning",
 		ignorecase: true,
 		message: "matched",
-		tokens: [
-			{ pattern: "dogs" },
-			{ pattern: "bark" },
-			{ tag: "IN", negate: true },
-		],
+		tokens: [{ pattern: "dogs" }, { pattern: "bark" }, { tag: "IN", negate: true }],
 	});
 	const required = makeSequence({
 		extends: "sequence",

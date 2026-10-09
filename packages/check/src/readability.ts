@@ -8,9 +8,9 @@ import { Fields } from "./decode.ts";
 import {
 	type Definition,
 	formatMessages,
+	type Rule,
 	readDefinition,
 	readStructureError,
-	type Rule,
 } from "./definition.ts";
 import { measuredScope } from "./metric.ts";
 import { allStringsInSlice, stringInSlice } from "./util.ts";

@@ -9,6 +9,7 @@
  */
 
 import { newE100, relToWD, type CLIFlags } from "@vale-ts/core";
+import { renderError } from "./error.ts";
 import { println, stdout } from "./out.ts";
 import { installPackages } from "./sync.ts";
 import { Add, Del, diff, type Line, Same } from "./testsuite/diff.ts";
@@ -145,7 +146,7 @@ function reportTests(
 		println(`  ${gray("from")}  ${relPath(r.case.path)}\n`);
 
 		if (r.err !== null) {
-			stdout(indentBlock(r.err.message));
+			stdout(indentBlock(renderError(r.err)));
 		} else if (r.case.want !== null) {
 			stdout(renderDiff(diff(r.case.want, r.got)));
 		} else {
@@ -198,7 +199,7 @@ function reportTestsJSON(
 		if (r.reason !== "") entry.reason = r.reason;
 		if (r.got !== "") entry.got = r.got;
 		if (r.case.want !== null && r.case.want !== "") entry.want = r.case.want;
-		if (r.err !== null) entry.error = r.err.message;
+		if (r.err !== null) entry.error = renderError(r.err);
 
 		out.push(entry);
 	}

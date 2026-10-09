@@ -41,7 +41,7 @@ export { Capitalization } from "./capitalization.ts";
 export { Conditional, hasCaptureGroup } from "./conditional.ts";
 export { Consistency } from "./consistency.ts";
 export type { BaseCheck } from "./decode.ts";
-export { Fields, FieldError } from "./decode.ts";
+export { FieldError, Fields } from "./decode.ts";
 export type { Definition, FilterEnv, Rule } from "./definition.ts";
 export {
 	alertFor,
@@ -60,8 +60,8 @@ export {
 	makeAlert,
 	makeRegexp,
 	matchToken,
-	newDefinition,
 	NONWORD_TEMPLATE,
+	newDefinition,
 	parseDefinition,
 	re2Loc,
 	readDefinition,
@@ -72,8 +72,8 @@ export {
 	validateDefinition,
 	vocabAccepts,
 	vocabFor,
-	withinPhrase,
 	WORD_TEMPLATE,
+	withinPhrase,
 } from "./definition.ts";
 export {
 	capitalize,
@@ -93,14 +93,14 @@ export {
 export { Existence, groupSpans } from "./existence.ts";
 export { filter, filterView } from "./filter.ts";
 export { editField, flatten, overlay, resolveRule } from "./inherit.ts";
-export { matchCase, recase, words } from "./matchcase.ts";
 export type { Selection } from "./manager.ts";
 export { Manager, paramValue } from "./manager.ts";
+export { matchCase, recase, words } from "./matchcase.ts";
 export {
 	checkExpression,
 	evalMath,
-	measuredScope,
 	Metric,
+	measuredScope,
 	round,
 	ruleError,
 	TENGO_TIMEOUT_MS,
@@ -120,8 +120,8 @@ export {
 	newScope,
 	newSelector,
 	Scope,
-	scopeBases,
 	Selector,
+	scopeBases,
 	splitOutside,
 } from "./scope.ts";
 export { parseMatches, Script, sourceSpan } from "./script.ts";
@@ -155,8 +155,8 @@ export {
 	keepWrap,
 	literalSkeleton,
 	recaseToTerm,
-	sharedLookaround,
 	Substitution,
+	sharedLookaround,
 } from "./substitution.ts";
 export { tokensWith } from "./tokens.ts";
 export { uposNames, uposTagPattern, uposWordPattern } from "./upos.ts";

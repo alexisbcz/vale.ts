@@ -1,0 +1,12 @@
+import { getComments, getLanguageFromExt, initCode } from "../../src/code/index.ts";
+import { scanComments } from "../../src/code/scanner.ts";
+import { readFileSync } from "node:fs";
+await initCode();
+console.log("=== 7.py ===");
+console.log(JSON.stringify(readFileSync("packages/lint/test/fixtures/comments/7.py","utf8")));
+for (const c of getComments(readFileSync("packages/lint/test/fixtures/comments/7.py","utf8"), getLanguageFromExt(".py"))) console.log(c);
+console.log("=== clj raw scan ===");
+const lang = getLanguageFromExt(".clj");
+for (const c of scanComments("(ns app.core)\n\n;; Starts the server.\n;; Twice over.\n(defn -main [] nil)\n", lang)) console.log(c);
+console.log("=== clj getComments ===");
+for (const c of getComments("(ns app.core)\n\n;; Starts the server.\n;; Twice over.\n(defn -main [] nil)\n", lang)) console.log(c);

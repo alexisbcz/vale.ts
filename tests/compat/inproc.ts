@@ -29,7 +29,7 @@ import {
 	setWarnSink,
 	ValeError,
 } from "@vale-ts/core";
-import { createLinter, DocumentErrors } from "@vale-ts/lint";
+import { createLinter, DocumentErrors, initCode } from "@vale-ts/lint";
 
 /** What one invocation printed and exited with. */
 export interface Outcome {
@@ -43,7 +43,7 @@ export interface Outcome {
  * Only the flags the compatibility suite passes are understood, because that
  * is all this is for; the real argument parser lives in `@vale-ts/cli`.
  */
-export function run(argv: readonly string[]): Outcome {
+export async function run(argv: readonly string[]): Promise<Outcome> {
 	const flags = newFlags();
 	const inputs: string[] = [];
 	let relative = false;
@@ -74,6 +74,11 @@ export function run(argv: readonly string[]): Outcome {
 	});
 
 	try {
+		// Loading the tree-sitter grammars is the one asynchronous step in the
+		// engine; a code file reached before it throws rather than silently
+		// skipping, so it happens here.
+		await initCode();
+
 		const config = readPipeline(flags, false);
 		const linter = createLinter(Manager.create(config));
 
@@ -135,7 +140,7 @@ function render(err: unknown): string {
 }
 
 if (import.meta.main) {
-	const outcome = run(process.argv.slice(2));
+	const outcome = await run(process.argv.slice(2));
 	if (outcome.out !== "") console.log(outcome.out);
 	process.exit(outcome.code);
 }

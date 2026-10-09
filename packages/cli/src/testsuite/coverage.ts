@@ -6,10 +6,9 @@
  * listed so that `uncovered` can say which never produced an alert.
  */
 
-import { isTestFile, walk } from "@vale-ts/core";
+import { isTestFile, tryParseLenient, walk } from "@vale-ts/core";
 import { readFileSync, statSync } from "node:fs";
 import * as path from "node:path";
-import { parse as parseYAML } from "yaml";
 import type { Result } from "./run.ts";
 import { isolatedName } from "./run.ts";
 
@@ -23,14 +22,8 @@ export function isRule(file: string): boolean {
 		return false;
 	}
 
-	let parsed: unknown;
-	try {
-		parsed = parseYAML(readFileSync(file, "utf8"));
-	} catch {
-		// Foreign YAML is not a rule, as `loadCases` treats it.
-		return false;
-	}
-
+	// Foreign YAML is not a rule, as `loadCases` treats it.
+	const parsed = tryParseLenient(readFileSync(file, "utf8"));
 	if (parsed === null || typeof parsed !== "object") return false;
 	const extend = (parsed as Record<string, unknown>).extends;
 	return extend !== undefined && extend !== "";
