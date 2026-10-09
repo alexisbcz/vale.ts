@@ -23,8 +23,64 @@ export type DocMatcher = (node: AnyNode) => boolean;
  * left over.
  */
 export function compileSelector(sel: string): DocMatcher {
-	const query = compile<AnyNode, Element>(standardSelector(expandHasChild(sel)));
+	const query = compile<AnyNode, Element>(portableSelector(sel));
 	return (node: AnyNode): boolean => query(node as Element);
+}
+
+/**
+ * A selector in the dialect `css-select` reads, with `cascadia`'s meaning.
+ *
+ * The rewrites are kept together, and applied where the selector is stored as
+ * well as where it is compiled, so the walker that does the matching and the
+ * manager that validated it are looking at the same thing.
+ */
+export function portableSelector(sel: string): string {
+	return caseInsensitiveContains(standardSelector(expandHasChild(sel)));
+}
+
+/**
+ * Spells `:contains()` as `css-select`'s case-insensitive form.
+ *
+ * `cascadia` compares case-insensitively and `css-select` spells that
+ * `:icontains()`. Without the rewrite a heading written `## Methods` is not
+ * found by `:contains("methods")`, and a selection that matched nothing is
+ * reported as a missing section rather than as the one it is.
+ *
+ * Walked rather than matched, so a `:contains(` inside a quoted string -- a
+ * selector looking for that text -- is left alone.
+ */
+function caseInsensitiveContains(sel: string): string {
+	const lowered = sel.toLowerCase();
+	const name = ":contains(";
+
+	let out = "";
+	let quote = "";
+	let i = 0;
+
+	while (i < sel.length) {
+		const r = sel[i]!;
+		if (quote !== "") {
+			if (r === quote) quote = "";
+			out += r;
+			i++;
+			continue;
+		}
+		if (r === '"' || r === "'") {
+			quote = r;
+			out += r;
+			i++;
+			continue;
+		}
+		if (lowered.startsWith(name, i)) {
+			out += ":icontains(";
+			i += name.length;
+			continue;
+		}
+		out += r;
+		i++;
+	}
+
+	return out;
 }
 
 /**

@@ -9,9 +9,13 @@
  * That is all this does differently. The text is handed to the same
  * `CommentBuilder` a captured node goes through, so a comment found here is
  * dedented, scoped and placed exactly as one found by a query -- and the
- * markup a view maps onto the file works the same way. The one thing a
- * delimiter cannot know is context: a `#` inside a string is read as a
- * comment, which is the price of having no parser.
+ * markup a view maps onto the file works the same way.
+ *
+ * What a delimiter cannot know is context, so the one piece of context that
+ * matters is tracked: a double-quoted string. Without it the `/*` in a
+ * Protocol Buffers option -- `get: "/v1/{name=bars/*}"` -- opened a comment
+ * that swallowed the next six lines. YAML needs more than that, and has a
+ * reader of its own below.
  */
 
 import { CommentBuilder } from "./query.ts";
@@ -50,8 +54,9 @@ export function scanComments(source: string, lang: Language): Comment[] {
 			continue;
 		}
 
-		const start = matchOf(delims.blockStart, line);
-		const inline = matchOf(delims.inline, line);
+		const strings = stringSpans(line);
+		const start = matchOf(delims.blockStart, line, strings);
+		const inline = matchOf(delims.inline, line, strings);
 
 		// Whichever opens first on the line wins: `# a note` is a line comment
 		// even in a language whose block opener also begins with `#`.
@@ -84,7 +89,8 @@ export function scanComments(source: string, lang: Language): Comment[] {
 }
 
 /**
- * The first non-empty match of `re` in `line`, or null.
+ * The first non-empty match of `re` in `line` outside a string literal, or
+ * null.
  *
  * A language with no block comments names `$^` as its delimiters, which no
  * line can hold -- except an empty one, where the start and the end of the
@@ -92,9 +98,48 @@ export function scanComments(source: string, lang: Language): Comment[] {
  * have a width is what keeps every blank line from opening a comment, and is
  * what Go's `len(match) > 0` does.
  */
-function matchOf(re: RegExp, line: string): RegExpExecArray | null {
-	const m = re.exec(line);
-	return m === null || m[0].length === 0 ? null : m;
+function matchOf(
+	re: RegExp,
+	line: string,
+	strings: ReadonlyArray<[number, number]> = [],
+): RegExpExecArray | null {
+	const all = new RegExp(re.source, re.flags.includes("g") ? re.flags : `${re.flags}g`);
+	for (let m = all.exec(line); m !== null; m = all.exec(line)) {
+		if (m[0].length === 0) {
+			all.lastIndex++;
+			continue;
+		}
+		if (!strings.some(([from, to]) => m.index >= from && m.index < to)) return m;
+	}
+	return null;
+}
+
+/**
+ * The ranges of `line` held by a double-quoted string.
+ *
+ * Double quotes alone: a single quote is a character literal in C, a quote
+ * form in Clojure and an apostrophe in prose, and pairing those does more harm
+ * than leaving them. An unterminated quote runs to the end of the line, which
+ * is what a line-oriented reader has to assume.
+ */
+function stringSpans(line: string): Array<[number, number]> {
+	const spans: Array<[number, number]> = [];
+	let open = -1;
+
+	for (let i = 0; i < line.length; i++) {
+		if (open >= 0) {
+			if (line[i] === "\\") i++;
+			else if (line[i] === '"') {
+				spans.push([open, i + 1]);
+				open = -1;
+			}
+			continue;
+		}
+		if (line[i] === '"') open = i;
+	}
+
+	if (open >= 0) spans.push([open, line.length]);
+	return spans;
 }
 
 /**

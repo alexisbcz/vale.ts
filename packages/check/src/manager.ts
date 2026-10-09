@@ -42,7 +42,7 @@ import {
 import { filter } from "./filter.ts";
 import { flatten, resolveRule } from "./inherit.ts";
 import { docSelectorMap, expandScopes, scopeBases } from "./scope.ts";
-import { compileSelector } from "./selector.ts";
+import { compileSelector, portableSelector } from "./selector.ts";
 import { Substitution } from "./substitution.ts";
 import { stringInSlice } from "./util.ts";
 
@@ -177,7 +177,11 @@ export class Manager {
 	/** Every `doc(...)` selector any rule declared, in a stable order. */
 	selections(): Selection[] {
 		const found: Selection[] = [];
-		for (const [id, sel] of this.docs) found.push({ id, sel });
+		// Stored in the dialect the walker matches with, so the selector the
+		// manager validated and the one `css-select` runs are the same.
+		for (const [id, sel] of this.docs) {
+			found.push({ id, sel: portableSelector(sel) });
+		}
 		found.sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 		return found;
 	}

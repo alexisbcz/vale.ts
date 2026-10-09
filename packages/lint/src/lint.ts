@@ -66,14 +66,24 @@ interface ScopedRule {
 	rule: Rule;
 }
 
-/** The documents a run could not lint, each with its own error. */
+/**
+ * The documents a run could not lint, each with its own error.
+ *
+ * It carries the files that *did* lint, because the run reports both: the
+ * alerts of the documents that were read, and then the ones that could not be,
+ * exiting as an error. Throwing the errors alone would silently drop the
+ * alerts a mixed run found.
+ */
 export class DocumentErrors extends Error {
 	readonly errors: Error[];
+	/** The documents that were linted, in the order they were walked. */
+	readonly files: File[];
 
-	constructor(errors: Error[]) {
+	constructor(errors: Error[], files: File[] = []) {
 		super(errors.map((e) => e.message).join("\n"));
 		this.name = "DocumentErrors";
 		this.errors = errors;
+		this.files = files;
 	}
 }
 
@@ -306,8 +316,10 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 		}
 
 		if (docErrs.length > 0) {
+			// Files are linted in walk order, so their errors arrive in that
+			// order; sorted by path, the report reads the same way twice.
 			docErrs.sort((a, b) => errorPath(a).localeCompare(errorPath(b)));
-			throw new DocumentErrors(docErrs);
+			throw new DocumentErrors(docErrs, linted);
 		}
 		return linted;
 	}

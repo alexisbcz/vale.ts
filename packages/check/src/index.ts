@@ -126,7 +126,11 @@ export {
 } from "./scope.ts";
 export { parseMatches, Script, sourceSpan } from "./script.ts";
 export type { DocMatcher } from "./selector.ts";
-export { compileSelector, standardSelector } from "./selector.ts";
+export {
+	compileSelector,
+	portableSelector,
+	standardSelector,
+} from "./selector.ts";
 export type { NLPToken } from "./sequence.ts";
 export {
 	Sequence,

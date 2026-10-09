@@ -184,6 +184,7 @@ function language(init: Partial<Language> & Pick<Language, "delims" | "queries" 
 		docName: null,
 		grammar: null,
 		scanner: null,
+		verbatim: null,
 		...init,
 	};
 }
@@ -307,6 +308,9 @@ function define(ext: string): Language | null {
 				// matches what `delims` takes off; `cStyle` alone stops at `//`.
 				padding: (s) => computePadding(s, ["//", "///", "/*"]),
 				directive: CSHARP_DIRECTIVE,
+				// C# 11 raw string literals postdate the bundled grammar, which
+				// reads the `//` inside one as a comment.
+				verbatim: /"""[\s\S]*?"""/g,
 			});
 		case ".js":
 			// A cutset of " *" was tried here and cannot work: it makes the

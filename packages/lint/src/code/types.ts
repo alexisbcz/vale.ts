@@ -111,6 +111,15 @@ export interface Language {
 	grammar: Grammar | null;
 	/** The comment delimiters, for a language with no grammar. */
 	scanner: ScannerDelims | null;
+	/**
+	 * The ranges of the source the grammar wrongly reports comments inside: a
+	 * literal the grammar is older than.
+	 *
+	 * A comment that starts in one of these is dropped. This exists for exactly
+	 * one gap -- C# raw string literals, which the bundled grammar predates --
+	 * and should not grow: the right answer is a newer grammar.
+	 */
+	verbatim: RegExp | null;
 }
 
 /** What came off the front of a line, 1-based as alerts are. */

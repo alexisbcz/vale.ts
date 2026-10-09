@@ -45,7 +45,11 @@ export function newMarkdown(): MarkdownIt {
 	});
 
 	// CommonMark's preset leaves these off; GitHub-flavored Markdown has them.
-	md.enable(["table", "strikethrough"]);
+	// `linkify` in particular is load-bearing: a bare URL has to become a link,
+	// because the walker masks the text of a link whose text is its own `href`
+	// -- which is how a URL stays out of the prose. Left disabled, every word
+	// inside every bare URL is linted.
+	md.enable(["table", "strikethrough", "linkify"]);
 	md.use(footnote);
 	md.use(taskLists);
 	md.use(mathPlugin);

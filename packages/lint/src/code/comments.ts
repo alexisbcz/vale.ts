@@ -179,7 +179,9 @@ export function getComments(source: string, lang: Language): Comment[] {
 		// next file to be read could not be parsed at all.
 	}
 
-	const joined = coalesce(dropDirectives(dropShebang(comments), lang));
+	const joined = coalesce(
+		dropDirectives(dropShebang(dropVerbatim(comments, lang, source)), lang),
+	);
 	for (const c of joined) {
 		if (lang.doc !== null) c.masks = lang.doc(c.text);
 		const lead = leadingMask(c.text, c.doc);
@@ -187,6 +189,36 @@ export function getComments(source: string, lang: Language): Comment[] {
 	}
 
 	return joined;
+}
+
+/**
+ * Removes the comments that fall inside a literal the grammar is older than.
+ *
+ * See `Language.verbatim`. This runs before the comments are coalesced, so a
+ * dropped one cannot join the run above it.
+ */
+function dropVerbatim(
+	comments: readonly Comment[],
+	lang: Language,
+	source: string,
+): Comment[] {
+	const verbatim = lang.verbatim;
+	if (verbatim === null) return [...comments];
+
+	const spans = [...source.matchAll(verbatim)].map(
+		(m) => [m.index, m.index + m[0].length] as const,
+	);
+	if (spans.length === 0) return [...comments];
+
+	const starts = [0];
+	for (let i = 0; i < source.length; i++) {
+		if (source[i] === "\n") starts.push(i + 1);
+	}
+
+	return comments.filter((c) => {
+		const at = (starts[c.line - 1] ?? 0) + c.offset;
+		return !spans.some(([from, to]) => at >= from && at < to);
+	});
 }
 
 /** Removes the comments addressed to a tool rather than a reader. */

@@ -177,6 +177,15 @@ export function walk(
 	root: string,
 	walkFn: (entry: WalkEntry) => boolean | void,
 ): void {
+	// A root that is not there is the caller's mistake, not an empty tree:
+	// `vale missing.md` has to say so rather than report a clean run of
+	// nothing. Inside the walk a file that vanishes is skipped instead, which
+	// is what `filepath.Walk` does with a directory read it cannot repeat.
+	try {
+		lstatSync(root);
+	} catch {
+		throw new Error(`lstat ${root}: no such file or directory`);
+	}
 	walkFrom(root, root, walkFn);
 }
 
