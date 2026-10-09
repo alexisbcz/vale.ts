@@ -1,0 +1,84 @@
+name: Compatibility
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Weekly, so that a change in a converter -- Docutils, Asciidoctor -- shows
+    # up as a compatibility report rather than as a surprise in someone's pull
+    # request.
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      only:
+        description: "Run only the cases under this suite or case path"
+        required: false
+        default: ""
+
+concurrency:
+  group: compat-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  compat:
+    name: Vale's own end-to-end suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      # The same converters Vale shells out to. Without them a third of the
+      # suite skips itself, which would make the compatibility number mean
+      # less than it says.
+      - name: Install the external converters
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xsltproc
+          python3 -m pip install --quiet docutils
+          sudo gem install --no-document asciidoctor
+
+      - uses: actions/cache@v4
+        with:
+          path: tests/compat/.cache
+          key: compat-${{ runner.os }}-${{ hashFiles('tests/compat/pinned.ts') }}
+
+      - name: Fetch the corpus and the reference binary
+        run: bun run compat:fetch
+
+      - name: Check the harness against the reference binary
+        # Anything the pinned binary fails here is a property of the corpus or
+        # of this machine's converters, not of the port. Recording it first is
+        # what makes the next step's number readable.
+        run: bun tests/compat/run.ts --self-check --report .artifacts/self-check.md
+        continue-on-error: true
+
+      - name: Run the suite
+        run: |
+          mkdir -p .artifacts
+          bun tests/compat/run.ts \
+            --reference \
+            --only '${{ github.event.inputs.only }}' \
+            --report .artifacts/compat.md \
+            | tee .artifacts/compat.txt
+        env:
+          # A converter that failed to install is a failure here, not a quiet
+          # skip: a suite that silently stopped testing AsciiDoc would report a
+          # higher number for having tested less.
+          VALE_COMPAT_STRICT: "1"
+
+      - name: Summarize
+        if: always()
+        run: cat .artifacts/compat.md >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: compatibility-report
+          path: .artifacts/
+          if-no-files-found: warn

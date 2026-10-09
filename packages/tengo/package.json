@@ -1,0 +1,29 @@
+{
+  "name": "@vale-ts/tengo",
+  "version": "0.1.0",
+  "description": "An interpreter for the Tengo subset Vale's script rules, metric formulas and suggest actions are written in.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "dependencies": {
+    "@vale-ts/regex": "workspace:*"
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  }
+}

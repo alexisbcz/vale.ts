@@ -1,0 +1,7 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.vale-ts-cache/
+tests/compat/.out/
+coverage/
+tests/compat/.cache/
