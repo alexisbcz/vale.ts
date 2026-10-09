@@ -1,0 +1,13 @@
+# Checked out with LF everywhere, Windows included.
+#
+# The tests assert bytes: a fixture's comments are compared with their offsets,
+# and the NLP word lists are read line by line. Checked out with CRLF, every
+# one of those strings gains a `\r` and the assertions are about a different
+# file than the one that was committed.
+* text=auto eol=lf
+
+# Byte-for-byte, and not text at all: a trained model and a compiled grammar.
+*.bin binary
+*.wasm binary
+*.aff binary
+*.dic binary

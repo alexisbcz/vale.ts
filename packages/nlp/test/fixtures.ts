@@ -19,10 +19,16 @@ export function json<T>(name: string): T {
 	return JSON.parse(readFileSync(join(FIXTURES, name), "utf8")) as T;
 }
 
-/** Reads a fixture's lines, dropping the empty one a trailing newline leaves. */
+/**
+ * Reads a fixture's lines, dropping the empty one a trailing newline leaves.
+ *
+ * Split on either ending: a word list checked out with CRLF would otherwise
+ * hand every word a trailing `\r`, and `syllables("people\r")` is not
+ * `syllables("people")`.
+ */
 export function lines(name: string): string[] {
 	return readFileSync(join(FIXTURES, name), "utf8")
-		.split("\n")
+		.split(/\r?\n/)
 		.filter((l) => l !== "");
 }
 

@@ -12,6 +12,7 @@
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
+import { sanitize } from "@vale-ts/core";
 import {
 	type Comment,
 	getComments,
@@ -26,7 +27,11 @@ beforeAll(async () => {
 const FIXTURES = path.join(import.meta.dir, "fixtures", "comments");
 
 function fixture(name: string): Comment[] {
-	const src = readFileSync(path.join(FIXTURES, name), "utf8");
+	// `sanitize`, because that is what the linter hands the extractor: a file's
+	// content has its line endings normalized before any reader sees it. Read
+	// raw, a fixture checked out with CRLF puts a `\r` on the end of every
+	// comment.
+	const src = sanitize(readFileSync(path.join(FIXTURES, name), "utf8"));
 	return getComments(src, getLanguageFromExt(path.extname(name)));
 }
 

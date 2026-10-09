@@ -7,6 +7,7 @@
  * which of those it does apply to.
  */
 
+import * as nodePath from "node:path";
 import { compileExpr, type Expression } from "./expr.ts";
 import { parseFrontMatter } from "./frontmatter.ts";
 import { baseName, dirName, extName, toSlash } from "./util.ts";
@@ -108,11 +109,18 @@ export function newFileFields(
 	return fields;
 }
 
-/** `path` relative to the directory holding the root `.vale.ini`. */
+/**
+ * `path` relative to the directory holding the root `.vale.ini`.
+ *
+ * Both sides are made absolute first, the way Go's `filepath.Abs` does it: a
+ * test for a leading `/` calls `C:\docs\a.md` relative and resolves it
+ * against the working directory, which on Windows made every condition that
+ * reads `.Path` or `.Dir` false.
+ */
 export function relToRoot(path: string, rootINI: string): string {
 	if (rootINI === "") return path;
-	const root = toSlash(dirName(rootINI));
-	const abs = toSlash(path.startsWith("/") ? path : `${process.cwd()}/${path}`);
+	const root = toSlash(dirName(nodePath.resolve(rootINI)));
+	const abs = toSlash(nodePath.resolve(path));
 	if (!abs.startsWith(`${root}/`)) return path;
 	return abs.slice(root.length + 1);
 }

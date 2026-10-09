@@ -10,6 +10,7 @@
  */
 
 import { readdirSync, readlinkSync, statSync } from "node:fs";
+import * as nodePath from "node:path";
 
 import { builtinAffix, builtinDictionary, builtinName } from "./builtin.ts";
 import type { GoSpell, WordMatch } from "./gospell.ts";
@@ -333,9 +334,15 @@ export function newChecker(...options: CheckerOption[]): Checker {
 /** The closeness of two spellings, from 0 to 1, as the suggester measures it. */
 export { similarity };
 
+/**
+ * `filepath.Join(dir, name)`: the platform's own separator.
+ *
+ * A hard-coded `/` here reads a file on Windows and then reports a path with
+ * both separators in it, which a caller comparing paths does not recognize.
+ */
 function join(dir: string, name: string): string {
 	if (dir === "") return name;
-	return dir.endsWith("/") ? dir + name : `${dir}/${name}`;
+	return nodePath.join(dir, name);
 }
 
 /** `os.Stat(path) == nil`: the path resolves to something that exists. */

@@ -8,6 +8,7 @@
  */
 
 import { describe, expect, test } from "bun:test";
+import * as path from "node:path";
 import type { File } from "@vale-ts/core";
 import { newConfig, newFile, newFlags, which } from "@vale-ts/core";
 import { commonDir, type DITAHost, lintDITA, lintDITAHTML } from "../src/dita.ts";
@@ -53,12 +54,19 @@ describe("lintDITAHTML", () => {
 });
 
 describe("commonDir", () => {
+	// Written through `resolve` rather than as literals: the function answers in
+	// the platform's own paths, and on Windows `/a/b` resolves against the
+	// current drive.
+	const at = (...parts: string[]): string => path.resolve(path.join(...parts));
+
 	test("the deepest directory holding every path", () => {
-		expect(commonDir(["/a/b/c/one.dita", "/a/b/d/two.dita"])).toBe("/a/b");
+		expect(commonDir([at("/a/b/c/one.dita"), at("/a/b/d/two.dita")])).toBe(
+			at("/a/b"),
+		);
 	});
 
 	test("one directory is its own", () => {
-		expect(commonDir(["/a/b/one.dita", "/a/b/two.dita"])).toBe("/a/b");
+		expect(commonDir([at("/a/b/one.dita"), at("/a/b/two.dita")])).toBe(at("/a/b"));
 	});
 });
 

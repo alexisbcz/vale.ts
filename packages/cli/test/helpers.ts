@@ -6,7 +6,7 @@
  * alerts and nothing else, so that is what they are given.
  */
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, realpathSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import type { Alert, File } from "@vale-ts/core";
@@ -33,9 +33,21 @@ export function file(p: string, alerts: Alert[]): File {
 	} as unknown as File;
 }
 
+/**
+ * A scratch directory, by the path the rest of the system will call it.
+ *
+ * `realpath` because on macOS the temporary directory is reached through a
+ * symlink: `mkdtemp` answers `/var/folders/...` and anything that resolves the
+ * path answers `/private/var/folders/...`, so a test comparing the two sees a
+ * difference that is not there.
+ */
+function scratch(): string {
+	return realpathSync(mkdtempSync(path.join(tmpdir(), "vale-cli-test-")));
+}
+
 /** A scratch directory removed when `body` returns. */
 export function withTempDir<T>(body: (dir: string) => T): T {
-	const dir = mkdtempSync(path.join(tmpdir(), "vale-cli-test-"));
+	const dir = scratch();
 	try {
 		return body(dir);
 	} finally {
@@ -53,7 +65,7 @@ export function withTempDir<T>(body: (dir: string) => T): T {
 export async function inTempDir(
 	body: (dir: string) => Promise<void> | void,
 ): Promise<void> {
-	const dir = mkdtempSync(path.join(tmpdir(), "vale-cli-test-"));
+	const dir = scratch();
 	const cwd = process.cwd();
 	try {
 		process.chdir(dir);

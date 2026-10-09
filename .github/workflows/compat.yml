@@ -89,5 +89,7 @@ jobs:
         if: always()
         with:
           name: compatibility-report
+          # The directory is hidden, and v4 leaves hidden files out by default.
+          include-hidden-files: true
           path: .artifacts/
           if-no-files-found: warn
