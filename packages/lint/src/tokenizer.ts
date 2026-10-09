@@ -92,6 +92,10 @@ export class Tokenizer {
 		if (this.src[this.pos] === "<") {
 			const after = this.src[this.pos + 1] ?? "";
 			if (after === "!") return this.readMarkupDeclaration();
+			// `<?xml ... ?>` is a comment, not prose: Go's tokenizer uses one
+			// token type for a comment, a doctype and a processing
+			// instruction, and this is the third of them.
+			if (after === "?") return this.readProcessingInstruction();
 			if (after === "/") return this.readEndTag();
 			if (/[A-Za-z]/.test(after)) return this.readStartTag();
 			// A `<` that opens nothing is text, as the spec says.
@@ -117,7 +121,14 @@ export class Tokenizer {
 				break;
 			}
 			const after = this.src[i + 1] ?? "";
-			if (after === "!" || after === "/" || /[A-Za-z]/.test(after)) break;
+			if (
+				after === "!" ||
+				after === "?" ||
+				after === "/" ||
+				/[A-Za-z]/.test(after)
+			) {
+				break;
+			}
 			i++;
 		}
 		this.pos = i;
@@ -185,12 +196,35 @@ export class Tokenizer {
 		}
 
 		// A doctype, a CDATA section, or a bogus comment: everything up to the
-		// next `>`.
+		// next `>`. Only a doctype gets its own token type; the rest are
+		// comments, as Go's tokenizer has them -- a CDATA section is read as
+		// text only when the caller asked for foreign content, which Vale's
+		// use of the tokenizer never does.
 		const start = this.pos + 2;
 		let end = this.src.indexOf(">", start);
 		if (end < 0) end = this.src.length;
+		const body = this.src.slice(start, end);
 		this.pos = Math.min(end + 1, this.src.length);
-		this.type = TokenType.Doctype;
+		this.type =
+			body.slice(0, 7).toUpperCase() === "DOCTYPE"
+				? TokenType.Doctype
+				: TokenType.Comment;
+		this.data = decodeHTML(body);
+		return this.type;
+	}
+
+	/**
+	 * Reads `<?...>`, which is a comment whose data keeps its leading `?`.
+	 *
+	 * The `?` is part of the data because Go rewinds over it before reading to
+	 * the `>`, and a rule reading a comment's text would see the difference.
+	 */
+	private readProcessingInstruction(): TokenType {
+		const start = this.pos + 1;
+		let end = this.src.indexOf(">", start);
+		if (end < 0) end = this.src.length;
+		this.pos = Math.min(end + 1, this.src.length);
+		this.type = TokenType.Comment;
 		this.data = decodeHTML(this.src.slice(start, end));
 		return this.type;
 	}

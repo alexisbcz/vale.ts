@@ -50,6 +50,15 @@ export function newMarkdown(): MarkdownIt {
 	// -- which is how a URL stays out of the prose. Left disabled, every word
 	// inside every bare URL is linted.
 	md.enable(["table", "strikethrough", "linkify"]);
+
+	// markdown-it prettifies a linkified URL's visible text -- it decodes the
+	// percent-escapes and the punycode -- so `.../Plane_%28Unicode%29` is
+	// shown as `.../Plane_(Unicode)`. goldmark shows the URL as written, and
+	// the difference matters: the walker keeps a link out of the prose by
+	// recognizing that its text *is* its `href`, and a prettified text is not.
+	// Without this, every word inside such a URL is linted.
+	md.normalizeLinkText = (url) => url;
+
 	md.use(footnote);
 	md.use(taskLists);
 	md.use(mathPlugin);

@@ -13,7 +13,7 @@ import { type Config, Glob, newConfig, newFlags } from "@vale-ts/core";
 import { clean, leadingSpace, trailingSpace } from "../src/ast.ts";
 import { textToHTML } from "../src/html.ts";
 import { mathCloserIndex } from "../src/math.ts";
-import { prepMarkdown } from "../src/md.ts";
+import { newMarkdown, prepMarkdown } from "../src/md.ts";
 import { applyPatterns, hasPatterns } from "../src/patterns.ts";
 import { wrapSections } from "../src/selection.ts";
 import {
@@ -42,6 +42,27 @@ describe("the HTML tokenizer", () => {
 			[TokenType.Text, "Hi"],
 			[TokenType.EndTag, "p"],
 			[TokenType.Comment, "note"],
+		]);
+	});
+
+	test("an XML declaration is a comment, not prose", () => {
+		// Go's tokenizer uses one token type for a comment, a doctype and a
+		// processing instruction, and the walker reads none of them as prose.
+		// Read as text, `encoding="utf-8"` is a sentence with a quotation mark
+		// in it, and the readability rules count its words.
+		expect(tokens('<?xml version="1.0" encoding="utf-8"?>\n<p>Hi</p>')).toEqual([
+			[TokenType.Comment, '?xml version="1.0" encoding="utf-8"?'],
+			[TokenType.Text, "\n"],
+			[TokenType.StartTag, "p"],
+			[TokenType.Text, "Hi"],
+			[TokenType.EndTag, "p"],
+		]);
+	});
+
+	test("a declaration that is not a doctype is a comment too", () => {
+		expect(tokens("<!DOCTYPE html><!whatever>")).toEqual([
+			[TokenType.Doctype, "DOCTYPE html"],
+			[TokenType.Comment, "whatever"],
 		]);
 	});
 
@@ -193,6 +214,20 @@ describe("the Markdown masking pass", () => {
 
 	test("prose is left alone", () => {
 		expect(prepMarkdown("Just a sentence.")).toBe("Just a sentence.");
+	});
+});
+
+describe("the Markdown converter", () => {
+	test("a linkified URL keeps the text it was written with", () => {
+		// markdown-it would show this one as `.../Plane_(Unicode)`, having
+		// decoded the escapes. The walker keeps a URL out of the prose by
+		// recognizing that a link's text is its own `href`, so a prettified
+		// text means every word inside the URL is linted -- which is how
+		// `Unicode` here became a word with three syllables.
+		const url = "http://en.wikipedia.org/wiki/Plane_%28Unicode%29";
+		expect(newMarkdown().render(`see ${url}\n`)).toBe(
+			`<p>see <a href="${url}">${url}</a></p>\n`,
+		);
 	});
 });
 
