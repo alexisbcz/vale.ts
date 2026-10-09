@@ -1,27 +1,31 @@
 {
-  "name": "@vale-ts/spell",
-  "version": "0.1.0",
-  "description": "A Hunspell-compatible spell checker: affix expansion, lookup and suggestions.",
-  "license": "MIT",
-  "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "files": [
-    "src",
-    "dist",
-    "data"
-  ],
-  "publishConfig": {
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      }
-    }
-  }
+	"name": "@vale-ts/spell",
+	"version": "0.1.0",
+	"description": "A Hunspell-compatible spell checker: affix expansion, lookup and suggestions.",
+	"license": "MIT",
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"bun": "./src/index.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"files": [
+		"src",
+		"dist",
+		"data"
+	],
+	"publishConfig": {
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			}
+		}
+	}
 }

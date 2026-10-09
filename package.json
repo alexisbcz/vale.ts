@@ -1,50 +1,53 @@
 {
-  "name": "vale-ts-monorepo",
-  "private": true,
-  "type": "module",
-  "workspaces": [
-    "packages/*"
-  ],
-  "engines": {
-    "bun": ">=1.2.0"
-  },
-  "scripts": {
-    "build": "bun run scripts/build.ts",
-    "test": "bun test packages",
-    "test:compat": "bun tests/compat/run.ts",
-    "compat:fetch": "bun tests/compat/fetch.ts --reference",
-    "typecheck": "bun run scripts/typecheck.ts",
-    "lint": "biome check .",
-    "fmt": "biome check --write ."
-  },
-  "devDependencies": {
-    "@biomejs/biome": "^2.0.0",
-    "@types/bun": "latest",
-    "@types/markdown-it": "14.1.2",
-    "@vale-ts/check": "workspace:*",
-    "@vale-ts/cli": "workspace:*",
-    "@vale-ts/core": "workspace:*",
-    "@vale-ts/lint": "workspace:*",
-    "@vale-ts/models": "workspace:*",
-    "@vale-ts/nlp": "workspace:*",
-    "@vale-ts/regex": "workspace:*",
-    "@vale-ts/spell": "workspace:*",
-    "@vale-ts/tengo": "workspace:*",
-    "typescript": "^5.7.0",
-    "vale-ts": "workspace:*"
-  },
-  "dependencies": {
-    "css-select": "5.2.2",
-    "dom-serializer": "2.0.0",
-    "domhandler": "5.0.3",
-    "domutils": "3.2.2",
-    "entities": "6.0.1",
-    "markdown-it": "14.1.0",
-    "markdown-it-footnote": "4.0.0",
-    "markdown-it-task-lists": "2.1.1",
-    "parse5": "7.3.0",
-    "parse5-htmlparser2-tree-adapter": "7.1.0",
-    "smol-toml": "1.5.0",
-    "yaml": "2.8.1"
-  }
+	"name": "vale-ts-monorepo",
+	"private": true,
+	"type": "module",
+	"workspaces": [
+		"packages/*"
+	],
+	"engines": {
+		"bun": ">=1.2.0"
+	},
+	"scripts": {
+		"build": "bun run scripts/build.ts",
+		"pack": "bun run scripts/pack.ts",
+		"smoke": "node scripts/smoke.mjs",
+		"consumer": "bun run scripts/consumer.ts",
+		"test": "bun test",
+		"test:compat": "bun tests/compat/run.ts",
+		"compat:fetch": "bun tests/compat/fetch.ts --reference",
+		"typecheck": "bun run scripts/typecheck.ts",
+		"lint": "biome check .",
+		"fmt": "biome check --write ."
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.5.15",
+		"@types/bun": "latest",
+		"@types/markdown-it": "14.1.2",
+		"@vale-ts/check": "workspace:*",
+		"@vale-ts/cli": "workspace:*",
+		"@vale-ts/core": "workspace:*",
+		"@vale-ts/lint": "workspace:*",
+		"@vale-ts/models": "workspace:*",
+		"@vale-ts/nlp": "workspace:*",
+		"@vale-ts/regex": "workspace:*",
+		"@vale-ts/spell": "workspace:*",
+		"@vale-ts/tengo": "workspace:*",
+		"typescript": "^5.7.0",
+		"vale-ts": "workspace:*"
+	},
+	"dependencies": {
+		"css-select": "5.2.2",
+		"dom-serializer": "2.0.0",
+		"domhandler": "5.0.3",
+		"domutils": "3.2.2",
+		"entities": "6.0.1",
+		"markdown-it": "14.1.0",
+		"markdown-it-footnote": "4.0.0",
+		"markdown-it-task-lists": "2.1.1",
+		"parse5": "7.3.0",
+		"parse5-htmlparser2-tree-adapter": "7.1.0",
+		"smol-toml": "1.5.0",
+		"yaml": "2.8.1"
+	}
 }

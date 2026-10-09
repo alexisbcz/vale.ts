@@ -1,44 +1,48 @@
 {
-  "name": "@vale-ts/lint",
-  "version": "0.1.0",
-  "description": "The readers that turn a document into the blocks Vale's rules run against.",
-  "license": "MIT",
-  "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
-  "exports": {
-    ".": "./src/index.ts"
-  },
-  "files": [
-    "src",
-    "dist",
-    "data"
-  ],
-  "dependencies": {
-    "@vale-ts/check": "workspace:*",
-    "@vale-ts/core": "workspace:*",
-    "@vale-ts/nlp": "workspace:*",
-    "@vale-ts/regex": "workspace:*",
-    "css-select": "5.2.2",
-    "domhandler": "5.0.3",
-    "domutils": "3.2.2",
-    "entities": "6.0.1",
-    "markdown-it": "14.1.0",
-    "markdown-it-footnote": "4.0.0",
-    "markdown-it-task-lists": "2.1.1",
-    "parse5": "7.3.0",
-    "parse5-htmlparser2-tree-adapter": "7.1.0",
-    "tree-sitter-wasms": "0.1.13",
-    "web-tree-sitter": "0.25.10"
-  },
-  "publishConfig": {
-    "main": "./dist/index.js",
-    "types": "./dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      }
-    }
-  }
+	"name": "@vale-ts/lint",
+	"version": "0.1.0",
+	"description": "The readers that turn a document into the blocks Vale's rules run against.",
+	"license": "MIT",
+	"type": "module",
+	"main": "./src/index.ts",
+	"types": "./src/index.ts",
+	"exports": {
+		".": {
+			"types": "./src/index.ts",
+			"bun": "./src/index.ts",
+			"default": "./dist/index.js"
+		}
+	},
+	"files": [
+		"src",
+		"dist",
+		"data"
+	],
+	"dependencies": {
+		"@vale-ts/check": "workspace:*",
+		"@vale-ts/core": "workspace:*",
+		"@vale-ts/nlp": "workspace:*",
+		"@vale-ts/regex": "workspace:*",
+		"css-select": "5.2.2",
+		"domhandler": "5.0.3",
+		"domutils": "3.2.2",
+		"entities": "6.0.1",
+		"markdown-it": "14.1.0",
+		"markdown-it-footnote": "4.0.0",
+		"markdown-it-task-lists": "2.1.1",
+		"parse5": "7.3.0",
+		"parse5-htmlparser2-tree-adapter": "7.1.0",
+		"tree-sitter-wasms": "0.1.13",
+		"web-tree-sitter": "0.25.10"
+	},
+	"publishConfig": {
+		"main": "./dist/index.js",
+		"types": "./dist/index.d.ts",
+		"exports": {
+			".": {
+				"types": "./dist/index.d.ts",
+				"import": "./dist/index.js"
+			}
+		}
+	}
 }

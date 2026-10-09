@@ -46,7 +46,7 @@ jobs:
       - run: bun install --frozen-lockfile
 
       - name: Test
-        run: bun test packages
+        run: bun run test
 
   build:
     name: Build for publication
@@ -64,7 +64,17 @@ jobs:
         run: bun run build
 
       - name: Pack every package
-        run: bun run scripts/pack.ts
+        run: bun run pack
+
+      # What leaves the repository, installed the way a consumer installs it:
+      # `npm`, from the tarballs, run under Node. A file missing from `files`
+      # or a dependency still written as `workspace:*` is invisible until then.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install the tarballs and use them
+        run: bun run consumer
 
       - uses: actions/upload-artifact@v4
         with:
@@ -95,4 +105,4 @@ jobs:
       # only. A consumer on Node should get the same answers, so the built
       # bundle is exercised there rather than only under Bun.
       - name: Lint a document with the built bundle
-        run: node scripts/smoke.mjs
+        run: bun run smoke

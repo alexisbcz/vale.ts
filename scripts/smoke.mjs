@@ -7,11 +7,14 @@
  * so it also catches a bundling mistake that development never sees.
  */
 
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const dir = mkdtempSync(join(tmpdir(), "vale-ts-smoke-"));
+
+// A `StylesPath` that is set has to exist, even when every rule is built in.
+mkdirSync(join(dir, "styles"));
 
 writeFileSync(
 	join(dir, ".vale.ini"),

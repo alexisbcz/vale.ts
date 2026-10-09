@@ -13,21 +13,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import * as path from "node:path";
-
-const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
-
-const ORDER = [
-	"models",
-	"regex",
-	"nlp",
-	"spell",
-	"tengo",
-	"core",
-	"check",
-	"lint",
-	"vale",
-	"cli",
-];
+import { ORDER, ROOT, withPublishableManifest } from "./manifest.ts";
 
 let failed = 0;
 
@@ -35,9 +21,11 @@ for (const name of ORDER) {
 	const dir = path.join(ROOT, "packages", name);
 	if (!existsSync(path.join(dir, "package.json"))) continue;
 
-	const m = JSON.parse(
-		readFileSync(path.join(dir, "package.json"), "utf8"),
-	) as { name: string; version: string; private?: boolean };
+	const m = JSON.parse(readFileSync(path.join(dir, "package.json"), "utf8")) as {
+		name: string;
+		version: string;
+		private?: boolean;
+	};
 	if (m.private === true) continue;
 
 	const probe = spawnSync("npm", ["view", `${m.name}@${m.version}`, "version"], {
@@ -48,10 +36,14 @@ for (const name of ORDER) {
 		continue;
 	}
 
-	const result = spawnSync(
-		"npm",
-		["publish", "--access", "public", "--provenance"],
-		{ cwd: dir, encoding: "utf8", stdio: "inherit" },
+	// The manifest on disk depends on its siblings as `workspace:*`, which no
+	// registry can resolve; what is published names the versions instead.
+	const result = withPublishableManifest(dir, () =>
+		spawnSync("npm", ["publish", "--access", "public", "--provenance"], {
+			cwd: dir,
+			encoding: "utf8",
+			stdio: "inherit",
+		}),
 	);
 	if (result.status === 0) {
 		console.log(`  ok    ${m.name}@${m.version}`);

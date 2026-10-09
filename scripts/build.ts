@@ -15,7 +15,13 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync, rmSync } from "node:fs";
+import {
+	existsSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import * as path from "node:path";
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..");
@@ -43,6 +49,15 @@ function externals(m: Manifest): string[] {
 	];
 }
 
+/** Puts a Node shebang on a built command, replacing Bun's if it survived. */
+function shebang(file: string): void {
+	const built = readFileSync(file, "utf8");
+	const body = built.startsWith("#!")
+		? built.slice(built.indexOf("\n") + 1)
+		: built;
+	writeFileSync(file, `#!/usr/bin/env node\n${body}`);
+}
+
 const names = readdirSync(path.join(ROOT, "packages")).filter((n) =>
 	existsSync(path.join(ROOT, "packages", n, "src", "index.ts")),
 );
@@ -54,12 +69,23 @@ for (const name of names) {
 	const m = manifest(dir);
 
 	rmSync(path.join(dir, "dist"), { recursive: true, force: true });
+	// The projects are `composite`, so `tsc` consults its build log before it
+	// emits -- and a log left from a build whose `dist/` has since been removed
+	// says there is nothing to do. Clearing it is what makes a build from
+	// scratch actually emit the declarations.
+	rmSync(path.join(dir, "tsconfig.tsbuildinfo"), { force: true });
+
+	// A package with a `main.ts` is a command, and its bundle has to be a file
+	// Node can run: the source's shebang names Bun, so the built one names the
+	// runtime a consumer installing from a registry actually has.
+	const entries = ["src/index.ts"];
+	if (existsSync(path.join(dir, "src", "main.ts"))) entries.push("src/main.ts");
 
 	const bundle = spawnSync(
 		"bun",
 		[
 			"build",
-			"src/index.ts",
+			...entries,
 			"--outdir",
 			"dist",
 			"--target",
@@ -70,6 +96,10 @@ for (const name of names) {
 		],
 		{ cwd: dir, encoding: "utf8" },
 	);
+
+	if (bundle.status === 0 && entries.length > 1) {
+		shebang(path.join(dir, "dist", "main.js"));
+	}
 
 	const types = spawnSync(
 		"bunx",

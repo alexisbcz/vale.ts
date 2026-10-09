@@ -1,33 +1,27 @@
 {
-  "compilerOptions": {
-    "lib": [
-      "ESNext"
-    ],
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "moduleDetection": "force",
-    "types": [
-      "bun"
-    ],
-    "strict": true,
-    "noUncheckedIndexedAccess": false,
-    "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "exactOptionalPropertyTypes": false,
-    "verbatimModuleSyntax": true,
-    "skipLibCheck": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "composite": true,
-    "allowJs": false,
-    "resolveJsonModule": true,
-    "allowImportingTsExtensions": true,
-    "emitDeclarationOnly": true,
-    "isolatedModules": true,
-    "typeRoots": [
-      "./node_modules/@types"
-    ]
-  }
+	"compilerOptions": {
+		"lib": ["ESNext"],
+		"target": "ESNext",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"moduleDetection": "force",
+		"types": ["bun"],
+		"strict": true,
+		"noUncheckedIndexedAccess": false,
+		"noImplicitOverride": true,
+		"noFallthroughCasesInSwitch": true,
+		"exactOptionalPropertyTypes": false,
+		"verbatimModuleSyntax": true,
+		"skipLibCheck": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"composite": true,
+		"allowJs": false,
+		"resolveJsonModule": true,
+		"allowImportingTsExtensions": true,
+		"emitDeclarationOnly": true,
+		"isolatedModules": true,
+		"typeRoots": ["./node_modules/@types"]
+	}
 }

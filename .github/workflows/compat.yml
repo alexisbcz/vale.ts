@@ -69,8 +69,10 @@ jobs:
         env:
           # A converter that failed to install is a failure here, not a quiet
           # skip: a suite that silently stopped testing AsciiDoc would report a
-          # higher number for having tested less.
-          VALE_COMPAT_STRICT: "1"
+          # higher number for having tested less. Only the ones installed above
+          # are listed; the DITA toolkit and `typst2vast` are not, so the cases
+          # needing them still skip.
+          VALE_COMPAT_STRICT: "rst2html,asciidoctor,xsltproc"
 
       # The narrower question underneath the suite: given the same pattern and
       # the same text, does the translated regular expression match where

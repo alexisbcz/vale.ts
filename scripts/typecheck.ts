@@ -69,8 +69,32 @@ for (const name of packages()) {
 	);
 }
 
+// A package's own project covers its sources; the tests, the compatibility
+// harness and these scripts are checked together, because they import across
+// packages the way a consumer does.
+{
+	const result = spawnSync(
+		"bunx",
+		["tsc", "-p", "tsconfig.tests.json", "--pretty", "false"],
+		{ cwd: ROOT, encoding: "utf8" },
+	);
+	const output = `${result.stdout ?? ""}${result.stderr ?? ""}`.trim();
+	if (result.status === 0 && output === "") {
+		console.log("  ok    tests, harness and scripts");
+	} else {
+		failed++;
+		console.log("  FAIL  tests, harness and scripts");
+		console.log(
+			output
+				.split("\n")
+				.map((l) => `        ${l}`)
+				.join("\n"),
+		);
+	}
+}
+
 if (failed > 0) {
-	console.log(`\n${failed} package(s) do not typecheck`);
+	console.log(`\n${failed} project(s) do not typecheck`);
 	process.exit(1);
 }
-console.log("\nevery package typechecks");
+console.log("\neverything typechecks");

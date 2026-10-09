@@ -19,7 +19,7 @@
         "yaml": "2.8.1",
       },
       "devDependencies": {
-        "@biomejs/biome": "^2.0.0",
+        "@biomejs/biome": "2.5.15",
         "@types/bun": "latest",
         "@types/markdown-it": "14.1.2",
         "@vale-ts/check": "workspace:*",

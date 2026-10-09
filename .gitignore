@@ -5,3 +5,4 @@ dist/
 tests/compat/.out/
 coverage/
 tests/compat/.cache/
+.artifacts/
