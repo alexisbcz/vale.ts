@@ -12,8 +12,8 @@
  */
 
 import { stripANSI, strLen } from "@vale-ts/core";
-import { println } from "./out.ts";
-import { colorOn } from "./tty.ts";
+import { println, stdout } from "./out.ts";
+import { colorOn, progressOn } from "./tty.ts";
 
 /** Wraps `text` in an SGR sequence, or returns it unchanged. */
 function sgr(codes: string, text: string): string {
@@ -149,6 +149,54 @@ export function printWarning(msg: string): void {
 
 export function printInfo(msg: string): void {
 	println(infoMessage(msg));
+}
+
+/** A bar redrawn in place while `sync` works through its packages. */
+export interface Progress {
+	update(title: string): void;
+	increment(): void;
+	stop(): void;
+}
+
+const BAR_WIDTH = 40;
+
+/**
+ * A progress bar, or nothing when nobody is watching.
+ *
+ * pterm draws its bar whatever stdout is, which leaves a CI log full of
+ * carriage-returned frames; here a redirected run prints nothing and
+ * `--plain-progress` is the way to get a record of what was installed.
+ */
+export function newProgress(total: number): Progress | null {
+	if (!progressOn()) return null;
+
+	let done = 0;
+	let title = "";
+
+	const draw = () => {
+		const share = total === 0 ? 1 : done / total;
+		const filled = Math.round(share * BAR_WIDTH);
+		const bar = "█".repeat(filled) + " ".repeat(BAR_WIDTH - filled);
+		stdout(
+			`\r${title} [${done}/${total}] ${bar} ${Math.round(share * 100)}%`,
+		);
+	};
+
+	draw();
+
+	return {
+		update(next: string): void {
+			title = next;
+			draw();
+		},
+		increment(): void {
+			done++;
+			draw();
+		},
+		stop(): void {
+			stdout("\n");
+		},
+	};
 }
 
 /** The mark `ls-dirs` and `ls-vars` show for something that is there. */

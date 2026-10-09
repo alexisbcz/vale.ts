@@ -10,7 +10,7 @@
  * TOML has no such positions, so each value is found by searching for it.
  */
 
-import type { ScopeMatcher } from "@vale-ts/check";
+import type { Scope } from "@vale-ts/check";
 import type { Config, File, ScopedValues } from "@vale-ts/core";
 import {
 	Block,
@@ -24,7 +24,7 @@ import { findBestLineBySubstring } from "./util.ts";
 export interface MetadataHost {
 	config: Config;
 	/** The scopes `IgnoredScopes` excludes. */
-	ignoredScope(): ScopeMatcher;
+	ignoredScope(): Scope;
 	lintBlock(f: File, blk: Block, lines: number, pad: number, lookup: boolean): void;
 	lintScopedValues(f: File, values: readonly ScopedValues[]): void;
 }
@@ -64,7 +64,7 @@ function lintFrontMatterValues(
 	host: MetadataHost,
 	f: File,
 	fm: string,
-	ignored: ScopeMatcher,
+	ignored: Scope,
 ): void {
 	let values: ScopedValues[];
 	try {

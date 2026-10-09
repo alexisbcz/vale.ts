@@ -23,7 +23,7 @@ import type {
 	Definition,
 	Manager,
 	Rule,
-	ScopeMatcher,
+	Scope,
 	Selection,
 } from "@vale-ts/check";
 import { newScope } from "@vale-ts/check";
@@ -133,7 +133,7 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 	private readonly readers = new Map<string, (f: File) => void>();
 
 	/** `IgnoredScopes` as a matcher, built once. */
-	private ignored: ScopeMatcher | null = null;
+	private ignored: Scope | null = null;
 
 	/**
 	 * Whether a `dasel` or `textfsm` view reads this file.
@@ -219,7 +219,7 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 	}
 
 	/** The scopes `IgnoredScopes` excludes. */
-	ignoredScope(): ScopeMatcher {
+	ignoredScope(): Scope {
 		this.ignored ??= newScope(this.config.ignoredScopes);
 		return this.ignored;
 	}
