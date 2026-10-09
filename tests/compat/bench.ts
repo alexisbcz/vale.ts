@@ -101,7 +101,10 @@ function prepare(opts: Options): string {
 				continue;
 			}
 			if (!/\.(md|txt)$/.test(name)) continue;
-			writeFileSync(path.join(dir, `doc${n++}${path.extname(name)}`), readFileSync(full));
+			writeFileSync(
+				path.join(dir, `doc${n++}${path.extname(name)}`),
+				readFileSync(full),
+			);
 		}
 	};
 	walk(opts.docs);

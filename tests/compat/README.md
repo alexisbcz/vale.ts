@@ -7,10 +7,11 @@ something fails; each one narrows where the difference can be.
 
 Runs the **pinned Go binary** against Vale's own recorded output.
 
-Anything it fails is a property of the corpus or of this machine — a converter
-version, a dictionary that `vale sync` would have fetched, a default styles path
-— and not of the port. This sets the ceiling for every other number here, so
-it is the first thing to look at when a case fails.
+Anything it fails is a property of the corpus, of this machine, or of the
+release — a converter version, a dictionary that `vale sync` would have
+fetched, or a behavior the corpus asserts and the pinned release does not yet
+have, since the corpus commit is two days ahead of it. None of those is a
+property of the port, so this is the first thing to look at when a case fails.
 
 ```console
 bun tests/compat/run.ts --self-check
@@ -27,9 +28,10 @@ bun tests/compat/run.ts --only lint/md -v
 bun tests/compat/run.ts --report compat.md
 ```
 
-`--reference` is the number that matters. "Matches the corpus" can drift with a
-converter version; "agrees with the reference binary" is the two
-implementations compared here and now, on the same inputs.
+`--reference` compares the two implementations here and now, on the same
+inputs. Read it against `--self-check`: a case where the port matches the
+corpus and the binary does not is one where the port implements something the
+release does not yet.
 
 `--inproc` calls the library directly instead of spawning the CLI. A case that
 fails both ways is an engine difference; one that fails only through the CLI is
@@ -102,7 +104,9 @@ gem install asciidoctor      # AsciiDoc
 apt install xsltproc         # XML transforms
 ```
 
-A case needing one you do not have skips itself. `VALE_COMPAT_STRICT=1` makes
-that a failure instead, which is what continuous integration sets — a suite that
-silently stopped testing AsciiDoc would report a higher number for having tested
-less.
+A case needing one you do not have skips itself. `VALE_COMPAT_STRICT` names
+the converters whose absence is a failure instead — a comma-separated list, or
+`1` for all of them. Continuous integration lists the three it installs, so an
+install that silently failed is a failure here: a suite that stopped testing
+AsciiDoc would report a higher number for having tested less. The DITA toolkit
+and `typst2vast` are not listed, and the ten cases needing them skip.

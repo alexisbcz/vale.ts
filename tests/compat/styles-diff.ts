@@ -26,7 +26,13 @@ import {
 	writeFileSync,
 } from "node:fs";
 import * as path from "node:path";
-import { CACHE, fetchCorpus, fetchReference, REFERENCE, TESTDATA } from "./fetch.ts";
+import {
+	CACHE,
+	fetchCorpus,
+	fetchReference,
+	REFERENCE,
+	TESTDATA,
+} from "./fetch.ts";
 import { SHARED_FLAGS } from "./pinned.ts";
 import { clean } from "./suite.ts";
 
@@ -43,13 +49,18 @@ const CLI = path.join(HERE, "..", "..", "packages", "cli", "src", "main.ts");
  * `repetition` in write-good, and `sequence` in Joblint.
  */
 const PACKAGES: Record<string, string> = {
-	Microsoft: "https://github.com/errata-ai/Microsoft/releases/latest/download/Microsoft.zip",
+	Microsoft:
+		"https://github.com/errata-ai/Microsoft/releases/latest/download/Microsoft.zip",
 	Google: "https://github.com/errata-ai/Google/releases/latest/download/Google.zip",
-	proselint: "https://github.com/errata-ai/proselint/releases/latest/download/proselint.zip",
-	"write-good": "https://github.com/errata-ai/write-good/releases/latest/download/write-good.zip",
+	proselint:
+		"https://github.com/errata-ai/proselint/releases/latest/download/proselint.zip",
+	"write-good":
+		"https://github.com/errata-ai/write-good/releases/latest/download/write-good.zip",
 	alex: "https://github.com/errata-ai/alex/releases/latest/download/alex.zip",
-	Readability: "https://github.com/errata-ai/Readability/releases/latest/download/Readability.zip",
-	Joblint: "https://github.com/errata-ai/Joblint/releases/latest/download/Joblint.zip",
+	Readability:
+		"https://github.com/errata-ai/Readability/releases/latest/download/Readability.zip",
+	Joblint:
+		"https://github.com/errata-ai/Joblint/releases/latest/download/Joblint.zip",
 };
 
 export async function main(argv: readonly string[]): Promise<number> {
@@ -99,7 +110,9 @@ export async function main(argv: readonly string[]): Promise<number> {
 			console.log(`         + ${line}`);
 		}
 		const more =
-			only.missing.length + only.extra.length - Math.min(opts.show, only.missing.length) -
+			only.missing.length +
+			only.extra.length -
+			Math.min(opts.show, only.missing.length) -
 			Math.min(opts.show, only.extra.length);
 		if (more > 0) console.log(`         ... and ${more} more`);
 	}

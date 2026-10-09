@@ -75,8 +75,7 @@ describe.skipIf(!corpus)("Vale's own declarations", () => {
 				expect(c.name).not.toBe("");
 				// Validation already refuses a case that asserts nothing; this
 				// states the invariant the suite is read under.
-				const asserts =
-					c.want !== null || c.contains !== "" || c.absent.length > 0;
+				const asserts = c.want !== null || c.contains !== "" || c.absent.length > 0;
 				expect(asserts).toBe(true);
 			}
 		}

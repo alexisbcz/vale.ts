@@ -11,7 +11,13 @@
  * This is a port of `internal/e2e/suite_test.go`.
  */
 
-import { accessSync, constants, readdirSync, readFileSync } from "node:fs";
+import {
+	accessSync,
+	constants,
+	readdirSync,
+	readFileSync,
+	realpathSync,
+} from "node:fs";
 import * as path from "node:path";
 import { parse as parseYAML } from "yaml";
 import { TOOL_ALTERNATIVES } from "./pinned.ts";
@@ -282,6 +288,26 @@ function onPath(cmd: string): boolean {
 
 	resolved.set(cmd, found);
 	return found;
+}
+
+/**
+ * Replaces the working directory with nothing, leaving every path in the
+ * output relative to it.
+ *
+ * A case's files live in a temporary directory, and Vale reports a
+ * configuration error against the file's absolute path -- so the recorded
+ * output would hold the path of whatever machine recorded it. It does not: the
+ * expectations are relative, which is Vale's own suite normalizing the same
+ * way. Without this, every case asserting on a `styles/...` path would compare
+ * a relative expectation against an absolute line.
+ */
+export function stripDir(out: string, dir: string): string {
+	const real = realpathSync(dir);
+	let s = out;
+	for (const base of real === dir ? [dir] : [dir, real]) {
+		s = s.replaceAll(`${base}${path.sep}`, "").replaceAll(base, "");
+	}
+	return s;
 }
 
 /**

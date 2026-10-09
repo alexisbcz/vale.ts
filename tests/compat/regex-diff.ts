@@ -204,9 +204,14 @@ function build(dir: string, specs: readonly PatternSpec[]): void {
 
 	writeFileSync(
 		path.join(dir, ".vale.ini"),
-		["StylesPath = styles", "MinAlertLevel = suggestion", "", "[*.txt]", "BasedOnStyles = T", ""].join(
-			"\n",
-		),
+		[
+			"StylesPath = styles",
+			"MinAlertLevel = suggestion",
+			"",
+			"[*.txt]",
+			"BasedOnStyles = T",
+			"",
+		].join("\n"),
 	);
 	writeFileSync(path.join(dir, "corpus.txt"), `${CORPUS}\n`);
 

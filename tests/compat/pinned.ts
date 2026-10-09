@@ -60,8 +60,10 @@ export const SHARED_FLAGS = [
  * The external converters a case may need, and every spelling Vale accepts.
  *
  * A case is skipped when none of its alternatives resolve, so the suite runs on
- * a machine with none of them installed -- and `VALE_COMPAT_STRICT` turns that
- * skip into a failure, which is what continuous integration should set.
+ * a machine with none of them installed. `VALE_COMPAT_STRICT` names the ones
+ * whose absence is a failure instead -- a comma-separated list, or `1` for all
+ * of them -- which is how continuous integration asserts that the converters
+ * it installed are actually there.
  */
 export const TOOL_ALTERNATIVES: Record<string, string[]> = {
 	rst2html: ["rst2html", "rst2html.py", "rst2html-3", "rst2html-3.py"],

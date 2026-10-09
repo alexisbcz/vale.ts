@@ -19,7 +19,16 @@
  */
 
 import { spawnSync } from "node:child_process";
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	closeSync,
+	mkdirSync,
+	openSync,
+	readFileSync,
+	rmSync,
+	unlinkSync,
+	writeFileSync,
+} from "node:fs";
+import * as os from "node:os";
 import * as path from "node:path";
 import { fetchCorpus, fetchReference, REFERENCE, TESTDATA } from "./fetch.ts";
 import { SHARED_FLAGS } from "./pinned.ts";
@@ -30,6 +39,7 @@ import {
 	loadSuites,
 	missingTools,
 	type Suite,
+	stripDir,
 	workdir,
 } from "./suite.ts";
 
@@ -64,7 +74,14 @@ export interface Options {
 	/** Run only the cases whose `<suite>/<case>` path starts with this. */
 	only: string;
 	/** Treat a missing converter as a failure rather than a skip. */
-	strict: boolean;
+	/**
+	 * The converters whose absence is a failure rather than a skip.
+	 *
+	 * Empty means every missing converter is a skip; `["*"]` means none of them
+	 * is. Continuous integration lists the ones it installs, so a failed
+	 * install is a failure here while a toolkit nobody has still skips.
+	 */
+	strict: string[];
 	/** Where to write a Markdown report. */
 	report: string;
 	/** Print each case as it runs. */
@@ -129,7 +146,10 @@ export function runCase(suite: Suite, kase: Case, opts: Options): Outcome {
 	};
 
 	const absent = missingTools(kase.requires);
-	if (absent.length > 0 && !opts.strict) {
+	const required = absent.filter(
+		(t) => opts.strict.includes("*") || opts.strict.includes(t),
+	);
+	if (absent.length > 0 && required.length === 0) {
 		return { ...base, status: "skip", note: `needs ${absent.join(", ")}` };
 	}
 
@@ -241,24 +261,40 @@ function invoke(
 	const entry = inproc ? INPROC : CLI;
 	const argv = reference ? [...args] : [entry, ...args];
 
-	const result = spawnSync(cmd, argv, {
-		cwd: dir,
-		encoding: "utf8",
-		stdio: [kase.stdin === "" ? "ignore" : "pipe", "pipe", "pipe"],
-		input: kase.stdin === "" ? undefined : readStdin(dir, kase.stdin),
-		env: { ...process.env, NO_COLOR: "1" },
-		maxBuffer: 64 * 1024 * 1024,
-	});
+	// Both streams are written to one file, which is what gives the output the
+	// order Go's `CombinedOutput` gives it: a warning printed while the
+	// configuration loads comes before the alerts, not after everything on
+	// stdout. Capturing them separately and joining them would reorder it.
+	const merged = path.join(os.tmpdir(), `vale-compat-${process.pid}-${runs++}`);
+	const fd = openSync(merged, "w+");
+	let out: string;
+	let result: ReturnType<typeof spawnSync>;
+	try {
+		result = spawnSync(cmd, argv, {
+			cwd: dir,
+			stdio: [kase.stdin === "" ? "ignore" : "pipe", fd, fd],
+			input: kase.stdin === "" ? undefined : readStdin(dir, kase.stdin),
+			env: { ...process.env, NO_COLOR: "1" },
+		});
+		out = readFileSync(merged, "utf8");
+	} finally {
+		closeSync(fd);
+		try {
+			unlinkSync(merged);
+		} catch {
+			// Already gone.
+		}
+	}
 
 	if (result.error !== undefined) {
 		return { out: `could not run ${cmd}: ${result.error.message}`, code: -1 };
 	}
 
-	return {
-		out: clean(`${result.stdout ?? ""}${result.stderr ?? ""}`),
-		code: result.status ?? -1,
-	};
+	return { out: clean(stripDir(out, dir)), code: result.status ?? -1 };
 }
+
+/** Numbers the capture files, so two cases never share one. */
+let runs = 0;
 
 function readStdin(dir: string, name: string): string {
 	return readFileSync(path.join(dir, name), "utf8");
@@ -402,11 +438,24 @@ function message(err: unknown): string {
 	return err instanceof Error ? err.message : String(err);
 }
 
+/**
+ * Reads `VALE_COMPAT_STRICT`: a comma-separated list of converters, or `1` for
+ * all of them.
+ */
+function strictList(value: string | undefined): string[] {
+	if (value === undefined || value === "") return [];
+	if (value === "1" || value === "all") return ["*"];
+	return value
+		.split(",")
+		.map((s) => s.trim())
+		.filter((s) => s !== "");
+}
+
 function parseOptions(argv: readonly string[]): Options {
 	const opts: Options = {
 		reference: argv.includes("--reference"),
 		only: "",
-		strict: process.env.VALE_COMPAT_STRICT !== undefined,
+		strict: strictList(process.env.VALE_COMPAT_STRICT),
 		report: "",
 		verbose: argv.includes("--verbose") || argv.includes("-v"),
 		inproc: argv.includes("--inproc"),
@@ -418,7 +467,7 @@ function parseOptions(argv: readonly string[]): Options {
 		else if (argv[i]?.startsWith("--only=")) opts.only = argv[i]!.slice(7);
 		else if (argv[i] === "--report") opts.report = argv[i + 1] ?? "";
 		else if (argv[i]?.startsWith("--report=")) opts.report = argv[i]!.slice(9);
-		else if (argv[i] === "--strict") opts.strict = true;
+		else if (argv[i] === "--strict") opts.strict = ["*"];
 	}
 
 	return opts;
