@@ -2,11 +2,23 @@
 
 ```console
 bun install
-bun test                 # every package's unit tests
-bun run typecheck        # tsc, package by package, leaves first
+bun test                 # every package's tests, and the harness's own
+bun run typecheck        # tsc, package by package, leaves first, then the tests
 bun run lint             # biome
 bun run fmt              # biome, writing fixes
 ```
+
+Before a release, or after touching a manifest or the build:
+
+```console
+bun run build            # bundle each package to dist/, with declarations
+bun run pack             # tarballs in .artifacts/
+bun run consumer         # install them with npm and use them under Node
+```
+
+`consumer` is the one that catches what the repository cannot see: a file left
+out of `files`, a `bin` pointing at TypeScript, a sibling still depended on as
+`workspace:*`.
 
 ## The compatibility suite
 
@@ -22,8 +34,10 @@ bun run test:compat -- --self-check  # does the binary match its own corpus here
 ```
 
 Run `--self-check` first when a case fails. If the pinned binary fails the same
-case on your machine, the difference is in the corpus or in your converters, and
-the port is not the thing to change.
+case on your machine, the difference is in the corpus, in your converters, or in
+the release -- the corpus commit is slightly ahead of the last release, so some
+cases assert behavior no published binary has yet. In none of those is the port
+the thing to change.
 
 The external converters some cases need:
 

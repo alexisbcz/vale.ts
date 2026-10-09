@@ -88,7 +88,8 @@ which surfaces as the `E201` a style author expects.
 | `yuin/goldmark` | `markdown-it` | CommonMark with the GitHub extensions, plus the `$…$` math rules Vale adds |
 | `x/net/html` tokenizer | `lint/tokenizer.ts` | written out, because the walker depends on its exact token shape |
 | `cascadia` + `x/net/html` tree | `parse5` + `css-select` | only for `doc(...)` selectors, which need a tree |
-| `tomwright/dasel` | `core/dasel.ts` | a documented subset: the constructs Vale's own views use |
+| `tomwright/dasel` | `core/dasel.ts` | a documented subset: the constructs Vale's own views use, read one step at a time so that a failure is reported where dasel reports it |
+| `go-tree-sitter` + grammars | `web-tree-sitter` + `tree-sitter-wasms` | the same grammars, compiled to wasm; six languages fall back to a scanner, below |
 | `textfsm` | `core/textfsm.ts` | ported |
 | `go-org` | `lint/org.ts` | written out; what it covers is documented in the file |
 | `pterm`, `tablewriter` | `cli/` | the few ANSI sequences and the column fitting, written out |
@@ -107,6 +108,15 @@ Known and accepted:
   few constructs -- an attribute's order, a task list's markup. The walker reads
   text and tags, so most differences are invisible, but a rule scoped to a class
   that only one of them emits would see different text.
+
+  One of these was not invisible and is fixed: markdown-it prettifies a
+  linkified URL's visible text, decoding its percent-escapes and its punycode,
+  and goldmark leaves it as written. The walker keeps a URL out of the prose by
+  recognizing that a link's text *is* its `href`, so a prettified text meant
+  every word inside such a URL was linted. `normalizeLinkText` is the identity
+  here. A bare non-ASCII *domain* is still a difference, because the `href` is
+  punycoded on this side only; nothing in Vale's corpus or in the style
+  packages has one.
 - **External converters.** reStructuredText, AsciiDoc, DITA and Typst are
   converted by the same programs Vale calls, so the two agree exactly -- as long
   as the same versions are installed. The compatibility suite's `--self-check`
@@ -116,6 +126,15 @@ Known and accepted:
   `İ`, final sigma, the ligatures). `@vale-ts/spell` reimplements the simple
   mapping, because Hunspell's `CHECKSHARPS` and Turkic handling depend on it;
   elsewhere the difference is accepted.
+- **Six languages read their comments with a scanner, not a grammar.**
+  `tree-sitter-wasms` is pinned to a build that `web-tree-sitter` 0.26 and later
+  refuse, and inside the version that accepts it the `yaml`, `elm` and `ql`
+  modules are unusable -- `yaml` breaks the runtime for every file parsed after
+  it. So YAML, Haskell, Julia, Protobuf, Clojure and PowerShell are read by a
+  delimiter scanner in `lint/code/scanner.ts`. It produces the same `Comment`
+  shape, so dedenting, markup inside comments and alert placement are
+  identical; what it cannot do is run a view's tree-sitter *queries*, because
+  there is no tree to query.
 - **Map iteration order.** Go randomizes it, and a few places in Vale iterate a
   map where the order is not quite irrelevant. This port iterates in insertion
   order, which is deterministic -- so where Go's output varies between runs, this

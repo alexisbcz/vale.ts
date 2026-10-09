@@ -42,10 +42,11 @@ it is the part that took years to learn.
 | Rule types | `existence`, `substitution`, `occurrence`, `repetition`, `consistency`, `capitalization`, `conditional`, `readability`, `spelling`, `sequence`, `metric`, `script` |
 | Formats read natively | Markdown, MDX, MyST, Quarto, HTML, XML, Org, QDoc, plain text, Jupyter, JSON/YAML/TOML, source comments for 20+ languages |
 | Formats needing a converter | reStructuredText (Docutils), AsciiDoc (Asciidoctor), DITA (DITA-OT), Typst (`typst2vast`) — the same tools Vale itself shells out to |
-| Compatibility | run `bun run test:compat -- --reference` for the current number |
+| Compatibility | **357 of 357** runnable cases from Vale's own end-to-end suite, measured; 10 more need a converter nobody has installed here |
 
-Run the compatibility suite to see exactly where this port and Vale disagree;
-see [Compatibility](#compatibility) below.
+The number is measured rather than asserted: see
+[Compatibility](#compatibility) for how, and for what the other two numbers
+mean.
 
 ## Install
 
@@ -128,14 +129,44 @@ bun run test:compat -- --self-check      # check the harness, not the port
 
 Three numbers come out of it, and they answer different questions:
 
-- **Matching the corpus** — does this port produce what Vale recorded?
-- **Agreeing with the reference** — do the two implementations produce the same
-  thing *on this machine*, with these converters installed? This is the number
-  that matters, because a case whose recording depends on a Docutils version
-  will differ for both implementations equally.
-- **`--self-check`** — does the pinned Go binary reproduce its own recorded
-  output here? Anything it fails is a property of the corpus or the machine, not
-  of the port, and sets the ceiling for the other two.
+- **Matching the corpus** — does this port produce what Vale recorded? This is
+  **357 of 357**, with 10 cases skipped for want of the DITA toolkit and
+  `typst2vast`.
+- **`--self-check`** — does the pinned Go binary reproduce the same recordings?
+  Here it is **332 of 357**. The corpus is pinned to a commit two days *after*
+  the last release, so most of what the binary misses is unreleased work the
+  corpus already asserts: a rule's `affix` option, the "looks like code"
+  spelling message, the warning when a section drops a package's styles. A few
+  are machine properties — a dictionary `vale sync` would have fetched.
+- **Agreeing with the reference** (`--reference`) — do the two implementations
+  produce the same thing *on this machine*? Worth running, and worth reading
+  with the line above in hand: where the port follows the corpus and the
+  released binary does not yet, the two disagree because the port is ahead.
+
+That ordering is deliberate. "Matches the corpus" is the contract, because the
+corpus is what Vale says about itself; the binary is one build of it.
+
+Two narrower tests sit underneath the suite, because a difference in either is
+otherwise invisible until some rule in some style quietly stops firing:
+
+```console
+bun tests/compat/regex-diff.ts     # same pattern, same text: does it match where regexp2 does?
+bun tests/compat/styles-diff.ts    # Microsoft, Google, proselint, write-good, alex, over real documents
+```
+
+`regex-diff` turns each pattern into a one-token rule, lints a plain-text
+corpus with the real binary, and compares. Plain text is deliberate: nothing
+converts between the file and the block, so a column is a column and any
+difference belongs to the engine. It currently reports **600 of 600 patterns
+matching identically**.
+
+`styles-diff` is the other half: Vale's suite is a set of cases someone thought
+of, and this is whatever documents are at hand run through the style packages
+people actually install. **109 of 109 documents identical, 7,034 alerts**, over
+161 rules from Microsoft, Google, proselint, write-good, alex, Readability and
+Joblint. Both of the differences it found last are fixed rather than recorded:
+an XML declaration that was being read as prose, and a linkified URL whose
+visible text markdown-it prettifies and goldmark leaves as written.
 
 The corpus and the binary are pinned in
 [`tests/compat/pinned.ts`](tests/compat/pinned.ts) and fetched on demand;
@@ -146,10 +177,19 @@ blocks, each of which is an assertion about Vale's output.
 
 ```console
 bun install
-bun test                    # every package's unit tests
-bun run typecheck           # tsc across the workspace
+bun test                    # every package's tests, and the harness's own
+bun run typecheck           # tsc across the workspace, tests included
 bun run lint                # biome
 bun run test:compat         # the compatibility suite
+```
+
+And, for what leaves the repository:
+
+```console
+bun run build               # bundle each package to dist/, with declarations
+bun run pack                # tarballs in .artifacts/
+bun run consumer            # install those tarballs with npm, use them on Node
+bun run smoke               # lint a document with the built bundle
 ```
 
 ### How it fits together
