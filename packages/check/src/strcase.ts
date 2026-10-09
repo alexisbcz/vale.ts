@@ -393,7 +393,7 @@ export function pascal(s: string): string {
 	let wasSpace = false;
 	let i = 0;
 	for (const raw of removeCase(s, " ", lower)) {
-		const c = i === 0 || wasSpace ? raw.toUpperCase() : raw;
+		const c: string = i === 0 || wasSpace ? raw.toUpperCase() : raw;
 		wasSpace = c === " ";
 		if (!wasSpace) out += c;
 		i += raw.length;

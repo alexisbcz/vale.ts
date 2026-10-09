@@ -21,9 +21,18 @@
  * `__res__`. Compiling is the expensive half, which is why it is separated
  * from running: a rule is compiled once and cloned per block.
  *
- * `os` is not among the modules this package implements, deliberately -- Vale
- * withholds it, and a style a user downloaded should not be able to read their
- * files.
+ * # Modules
+ *
+ * `text`, `math` and `fmt` are implemented, which is exactly the set Vale
+ * calls `SetImports` with. The set is closed on purpose rather than for want
+ * of effort:
+ *
+ *   - `os` is withheld for the reason Vale withholds it. A style a user
+ *     downloaded should not be able to read their files.
+ *   - `enum`, `json` and `times` are left out because a rule that imported one
+ *     would run here and fail under Go, and the point of this package is to
+ *     agree with Go about what a rule does. If Vale ever allows one, it goes
+ *     in `interp.ts` beside the other three.
  */
 
 import type { Program } from "./ast.ts";
@@ -125,7 +134,10 @@ export class Script {
 export class Compiled {
 	private readonly program: Program;
 	private readonly allowed: ReadonlySet<string>;
-	private readonly globals: Scope;
+	/** The globals a run starts from, declared value by declared value. */
+	private readonly declared: Map<string, Value>;
+	/** The scope the last run used, which `get` reads out of. */
+	private globals: Scope;
 
 	constructor(
 		program: Program,
@@ -134,20 +146,35 @@ export class Compiled {
 	) {
 		this.program = program;
 		this.allowed = allowed;
-		this.globals = new Scope(null);
-		for (const [name, value] of declared) this.globals.declare(name, value);
+		this.declared = new Map(declared);
+		this.globals = this.freshScope();
+	}
+
+	private freshScope(): Scope {
+		const scope = new Scope(null);
+		for (const [name, value] of this.declared) scope.declare(name, value);
+		return scope;
 	}
 
 	/** Replaces a declared global's value. */
 	set(name: string, value: unknown): void {
-		if (!this.globals.has(name)) {
+		if (!this.declared.has(name)) {
 			throw new TengoError(`global '${name}' not declared`);
 		}
-		this.globals.declare(name, fromJS(value));
+		this.declared.set(name, fromJS(value));
+		this.globals = this.freshScope();
 	}
 
-	/** Runs the program, throwing `TengoTimeout` past `timeoutMs`. */
+	/**
+	 * Runs the program, throwing `TengoTimeout` past `timeoutMs`.
+	 *
+	 * Each run starts from the declared globals, so the same clone can be run
+	 * again; Tengo's `Compiled` carries over whatever the previous run defined,
+	 * which would make a second run of a program opening with `matches := []`
+	 * fail on the redeclaration.
+	 */
 	run(options?: { timeoutMs?: number }): void {
+		this.globals = this.freshScope();
 		const interp = new Interpreter(
 			this.globals,
 			this.allowed,

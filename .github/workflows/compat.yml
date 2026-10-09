@@ -72,6 +72,13 @@ jobs:
           # higher number for having tested less.
           VALE_COMPAT_STRICT: "1"
 
+      # The narrower question underneath the suite: given the same pattern and
+      # the same text, does the translated regular expression match where
+      # regexp2 matches? A difference there is otherwise invisible until some
+      # rule in some style quietly stops firing.
+      - name: Differential test of the pattern translator
+        run: bun tests/compat/regex-diff.ts --limit 600 | tee -a .artifacts/compat.txt
+
       - name: Summarize
         if: always()
         run: cat .artifacts/compat.md >> "$GITHUB_STEP_SUMMARY"

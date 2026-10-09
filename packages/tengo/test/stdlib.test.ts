@@ -64,9 +64,11 @@ describe("text: regular expressions", () => {
 		// depend on.
 		expect(ev('text.re_match("(?s)a.b", "a\\nb")')).toBe(true);
 		expect(ev('text.re_match("a.b", "a\\nb")')).toBe(false);
-		expect(ev('text.re_replace("(?s) *(\\n```.*?```\\n)", "x \\n```go\\ny\\n```\\nz", "")')).toBe(
-			"xz",
-		);
+		expect(
+			ev(
+				'text.re_replace("(?s) *(\\n```.*?```\\n)", "x \\n```go\\ny\\n```\\nz", "")',
+			),
+		).toBe("xz");
 		// `\s` is Go's class, `[\t\n\f\r ]`, not JavaScript's wider one.
 		expect(ev('text.re_match("^\\\\s$", "\\t")')).toBe(true);
 		expect(ev('text.re_match("^\\\\s$", "\\u00a0")')).toBe(false);
@@ -95,14 +97,10 @@ describe("text: strings", () => {
 	});
 
 	test("fields, join, repeat and replace", () => {
-		expect(ev('text.fields("  foo bar  baz   ")')).toEqual([
-			"foo",
-			"bar",
-			"baz",
-		]);
+		expect(ev('text.fields("  foo bar  baz   ")')).toEqual(["foo", "bar", "baz"]);
 		expect(ev('text.fields("   ")')).toEqual([]);
 		expect(ev('text.join(["a", "b", "c"], "-")')).toBe("a-b-c");
-		expect(ev("text.join([1, 2], \",\")")).toBe("1,2");
+		expect(ev('text.join([1, 2], ",")')).toBe("1,2");
 		expect(ev('text.repeat("na", 2)')).toBe("nana");
 		expect(ev('text.replace("oink oink oink", "oink", "moo", 2)')).toBe(
 			"moo moo oink",
@@ -239,7 +237,7 @@ describe("math", () => {
 		expect(ev("math.is_inf(math.inf(-1), 0)")).toBe(true);
 		expect(ev("math.signbit(-1.0)")).toBe(true);
 		expect(ev("math.signbit(1.0)")).toBe(false);
-		expect(ev("math.nextafter(1.0, 2.0)")).toBe(1.0000000000000002);
+		expect(ev("math.nextafter(1.0, 2.0)")).toBe(1 + Number.EPSILON);
 	});
 
 	test("trigonometry", () => {
@@ -260,7 +258,7 @@ describe("math", () => {
 		expect(ev("math.j0(1.0)")).toBeCloseTo(0.7651976865579666, 7);
 		expect(ev("math.j1(1.0)")).toBeCloseTo(0.44005058574493355, 7);
 		expect(ev("math.jn(2, 1.0)")).toBeCloseTo(0.11490348493190047, 7);
-		expect(ev("math.jn(2, 5.0)")).toBeCloseTo(0.046565116277752216, 7);
+		expect(ev("math.jn(2, 5.0)")).toBeCloseTo(0.04656511627775221, 7);
 		expect(ev("math.y0(1.0)")).toBeCloseTo(0.08825696421567698, 7);
 		expect(ev("math.y1(1.0)")).toBeCloseTo(-0.7812128213002888, 7);
 		expect(ev("math.yn(2, 1.0)")).toBeCloseTo(-1.6506826068162546, 7);
@@ -297,16 +295,12 @@ describe("fmt", () => {
 	});
 
 	test("print and println join their operands with no separator", () => {
-		expect(capture('fmt := import("fmt")\nfmt.print("a", 1, true)')).toBe(
-			"a1true",
-		);
+		expect(capture('fmt := import("fmt")\nfmt.print("a", 1, true)')).toBe("a1true");
 		expect(capture('fmt := import("fmt")\nfmt.println("a", "b")')).toBe("ab\n");
 	});
 
 	test("printf writes a formatted string without a newline", () => {
-		expect(
-			capture('fmt := import("fmt")\nfmt.printf("%d-%d", 1, 2)'),
-		).toBe("1-2");
+		expect(capture('fmt := import("fmt")\nfmt.printf("%d-%d", 1, 2)')).toBe("1-2");
 	});
 
 	test("print renders a string bare, where %v would quote it", () => {

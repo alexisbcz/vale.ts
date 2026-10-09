@@ -22,7 +22,17 @@
         "@biomejs/biome": "^2.0.0",
         "@types/bun": "latest",
         "@types/markdown-it": "14.1.2",
+        "@vale-ts/check": "workspace:*",
+        "@vale-ts/cli": "workspace:*",
+        "@vale-ts/core": "workspace:*",
+        "@vale-ts/lint": "workspace:*",
+        "@vale-ts/models": "workspace:*",
+        "@vale-ts/nlp": "workspace:*",
+        "@vale-ts/regex": "workspace:*",
+        "@vale-ts/spell": "workspace:*",
+        "@vale-ts/tengo": "workspace:*",
         "typescript": "^5.7.0",
+        "vale-ts": "workspace:*",
       },
     },
     "packages/check": {
@@ -41,6 +51,9 @@
     "packages/cli": {
       "name": "@vale-ts/cli",
       "version": "0.1.0",
+      "bin": {
+        "vale-ts": "./src/main.ts",
+      },
       "dependencies": {
         "@vale-ts/check": "workspace:*",
         "@vale-ts/core": "workspace:*",

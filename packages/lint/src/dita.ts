@@ -179,8 +179,7 @@ export function lintDITAHTML(host: DITAHost, f: File, data: string): void {
 function findFile(root: string, name: string): string | null {
 	let found: string | null = null;
 	const stack = [root];
-	while (stack.length > 0) {
-		const dir = stack.pop();
+	for (let dir = stack.pop(); dir !== undefined; dir = stack.pop()) {
 		let entries: string[];
 		try {
 			entries = readdirSync(dir);

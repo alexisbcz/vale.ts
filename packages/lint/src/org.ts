@@ -164,7 +164,8 @@ export function orgToHTML(src: string): string {
 		) {
 			flush();
 			out.push("</li>\n");
-			out.push(`</${listStack.pop().tag}>\n`);
+			const open = listStack.pop();
+			if (open !== undefined) out.push(`</${open.tag}>\n`);
 		}
 	};
 

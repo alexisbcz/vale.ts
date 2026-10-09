@@ -126,10 +126,6 @@ const CONTINUE: Flow = { kind: "continue" };
 /** How deep a call chain may go before it would overflow the host stack. */
 const MAX_DEPTH = 2000;
 
-export interface RunOptions {
-	timeoutMs?: number;
-}
-
 export class Interpreter {
 	private readonly globals: Scope;
 	private readonly allowed: ReadonlySet<string>;
@@ -159,7 +155,12 @@ export class Interpreter {
 	}
 
 	private fail(message: string): never {
-		throw new TengoError(message);
+		throw this.error(message);
+	}
+
+	/** The same failure as `fail`, to be thrown where a `throw` reads better. */
+	private error(message: string): TengoError {
+		return new TengoError(message);
 	}
 
 	// --- statements -------------------------------------------------------
@@ -409,7 +410,7 @@ export class Interpreter {
 				if (ref !== undefined) return ref.value;
 				const builtin = BUILTINS.get(expr.name);
 				if (builtin !== undefined) return builtin;
-				this.fail(`unresolved reference '${expr.name}'`);
+				throw this.error(`unresolved reference '${expr.name}'`);
 			}
 
 			case "arrayLit":
@@ -602,7 +603,7 @@ export class Interpreter {
 				if (index.kind === "string" && index.value === "value") {
 					return container.value;
 				}
-				this.fail("invalid index on error");
+				throw this.error("invalid index on error");
 			}
 			case "undefined":
 				// Reading through undefined stays undefined, so `m.x.y.z` on a

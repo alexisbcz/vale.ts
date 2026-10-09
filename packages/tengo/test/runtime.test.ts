@@ -33,9 +33,7 @@ describe("the timeout", () => {
 	});
 
 	test("endless recursion is interruptible too", () => {
-		const compiled = Script.compile(
-			"f := func(n) { return f(n) }\nf(1)",
-		).clone();
+		const compiled = Script.compile("f := func(n) { return f(n) }\nf(1)").clone();
 		expect(() => compiled.run({ timeoutMs: 30 })).toThrow(TengoError);
 	});
 
@@ -65,9 +63,9 @@ describe("modules", () => {
 	test("the import is resolved when the program is compiled", () => {
 		// A rule that asks for a module it cannot have should fail when the
 		// style is loaded, not part-way through a lint.
-		expect(() =>
-			Script.compile('if false { x := import("os") }'),
-		).toThrow(TengoError);
+		expect(() => Script.compile('if false { x := import("os") }')).toThrow(
+			TengoError,
+		);
 	});
 
 	test("the available set can be narrowed", () => {
@@ -88,6 +86,19 @@ describe("modules", () => {
 			/module 'nope' not found/,
 		);
 	});
+
+	test("the modules Tengo has but Vale does not allow are absent", () => {
+		// A rule that imported one of these would run here and fail under Go.
+		for (const name of ["enum", "json", "times", "os", "rand", "base64"]) {
+			expect(() => Script.compile(`x := import("${name}")`)).toThrow(
+				new RegExp(`module '${name}' not found`),
+			);
+		}
+	});
+
+	test("a relative import is not a path this package will follow", () => {
+		expect(() => Script.compile('x := import("./sum")')).toThrow(TengoError);
+	});
 });
 
 describe("Script and Compiled", () => {
@@ -107,7 +118,7 @@ describe("Script and Compiled", () => {
 		expect(second.get("out")).toBe("bb");
 	});
 
-	test("a clone can be run more than once", () => {
+	test("a clone can be run more than once, from its declared globals", () => {
 		const script = Script.compile("n := 0\nn++");
 		const compiled = script.clone();
 		compiled.run();
@@ -161,7 +172,7 @@ describe("the value boundary", () => {
 	});
 
 	test("a map comes back as a plain object and an array as an Array", () => {
-		expect(runFor('out := {a: 1, b: [2]}', "out")).toEqual({ a: 1, b: [2] });
+		expect(runFor("out := {a: 1, b: [2]}", "out")).toEqual({ a: 1, b: [2] });
 		expect(Array.isArray(runFor("out := [1]", "out"))).toBe(true);
 	});
 

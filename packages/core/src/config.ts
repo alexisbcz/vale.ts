@@ -711,38 +711,34 @@ function processSources(cfg: Config, sources: readonly string[]): INIFile {
  */
 function shadowLoadFrom(sources: readonly Source[]): INIFile {
 	const primary = emptyINI(LOAD_OPTIONS);
-	let first = true;
 
 	for (const source of sources) {
 		const file = parseINI(source.text, LOAD_OPTIONS);
 		expandPaths(file, source.origin);
-		if (first) {
-			mergeAll(primary, file, true);
-			first = false;
-		} else {
-			mergeAll(primary, file, false);
-		}
+		mergeAll(primary, file);
 	}
 
 	return primary;
 }
 
-function mergeAll(primary: INIFile, other: INIFile, initial: boolean): void {
+function mergeAll(primary: INIFile, other: INIFile): void {
 	for (const section of other.sections()) {
 		const into = primary.newSection(section.name);
 		for (const key of section.keys()) {
 			const existing = into.getKey(key.name);
 			if (existing === undefined) {
 				const created = into.newKey(key.name, key.value);
-				// A key duplicated within one file already has shadows of its
-				// own; they belong to the same layer and are carried over.
+				// A key written twice in one file already has shadows of its
+				// own; they belong to the same layer, and are carried over so
+				// that two `BasedOnStyles` lines in one file both count.
 				for (const shadow of key.shadows) created.addShadow(shadow);
-			} else if (initial) {
-				existing.addShadow(key.value);
-			} else {
-				existing.addShadow(key.value);
-				for (const shadow of key.shadows) existing.addShadow(shadow);
+				continue;
 			}
+			// A key the layers share: this layer's value becomes a shadow of
+			// the one already held, which is what lets each option decide for
+			// itself which layer wins.
+			existing.addShadow(key.value);
+			for (const shadow of key.shadows) existing.addShadow(shadow);
 		}
 	}
 }
@@ -755,6 +751,11 @@ const PATH_KEYS = ["StylesPath"];
  *
  * A `StylesPath` is written relative to its own `.vale.ini`, not to wherever
  * Vale happened to be run from.
+ *
+ * Every value is resolved, including a second `StylesPath` line in the same
+ * file. Go expands only the first, which leaves a relative second one to
+ * resolve against the working directory and then fail the existence check it
+ * runs next -- a difference the user would read as a bug.
  */
 function expandPaths(file: INIFile, origin: string | null): void {
 	let base: string;

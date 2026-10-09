@@ -46,9 +46,10 @@ describe("append", () => {
 		expect(runFor("v := [1]\nv = append(v, 2, 3)\nout := v", "out")).toEqual([
 			1, 2, 3,
 		]);
-		expect(
-			runFor("a := [1]\nb := append(a, 2)\nout := [a, b]", "out"),
-		).toEqual([[1], [1, 2]]);
+		expect(runFor("a := [1]\nb := append(a, 2)\nout := [a, b]", "out")).toEqual([
+			[1],
+			[1, 2],
+		]);
 	});
 
 	test("the first argument has to be an array", () => {
@@ -59,9 +60,9 @@ describe("append", () => {
 
 describe("delete", () => {
 	test("removes a key and mutates the map", () => {
-		expect(runFor('v := {key: "value"}\ndelete(v, "key")\nout := v', "out")).toEqual(
-			{},
-		);
+		expect(
+			runFor('v := {key: "value"}\ndelete(v, "key")\nout := v', "out"),
+		).toEqual({});
 		expect(
 			runFor('v := {key: "value"}\ndelete(v, "missing")\nout := v', "out"),
 		).toEqual({ key: "value" });
@@ -78,12 +79,12 @@ describe("delete", () => {
 describe("splice", () => {
 	// The cases from Tengo's own documentation.
 	test("deletes from a start index", () => {
-		expect(runFor("v := [1, 2, 3]\nitems := splice(v, 0)\nout := [items, v]", "out")).toEqual(
-			[[1, 2, 3], []],
-		);
-		expect(runFor("v := [1, 2, 3]\nitems := splice(v, 1)\nout := [items, v]", "out")).toEqual(
-			[[2, 3], [1]],
-		);
+		expect(
+			runFor("v := [1, 2, 3]\nitems := splice(v, 0)\nout := [items, v]", "out"),
+		).toEqual([[1, 2, 3], []]);
+		expect(
+			runFor("v := [1, 2, 3]\nitems := splice(v, 1)\nout := [items, v]", "out"),
+		).toEqual([[2, 3], [1]]);
 		expect(
 			runFor("v := [1, 2, 3]\nitems := splice(v, 0, 1)\nout := [items, v]", "out"),
 		).toEqual([[1], [2, 3]]);
@@ -91,7 +92,10 @@ describe("splice", () => {
 
 	test("a delete count past the end is truncated", () => {
 		expect(
-			runFor('v := ["a", "b", "c"]\nitems := splice(v, 1, 99)\nout := [items, v]', "out"),
+			runFor(
+				'v := ["a", "b", "c"]\nitems := splice(v, 1, 99)\nout := [items, v]',
+				"out",
+			),
 		).toEqual([["b", "c"], ["a"]]);
 	});
 
@@ -103,7 +107,10 @@ describe("splice", () => {
 			),
 		).toEqual([[], ["a", "b", "c", "d", "e"]]);
 		expect(
-			runFor('v := ["a", "b", "c"]\nitems := splice(v, 2, 1, "d")\nout := [items, v]', "out"),
+			runFor(
+				'v := ["a", "b", "c"]\nitems := splice(v, 2, 1, "d")\nout := [items, v]',
+				"out",
+			),
 		).toEqual([["c"], ["a", "b", "d"]]);
 		expect(
 			runFor(
@@ -156,7 +163,7 @@ describe("conversions", () => {
 
 	test("a failed conversion is undefined, or the fallback", () => {
 		expect(evaluate('int("foo")')).toBeUndefined();
-		expect(evaluate('int(undefined, 10)')).toBe(10);
+		expect(evaluate("int(undefined, 10)")).toBe(10);
 		expect(evaluate("int(undefined, false)")).toBe(false);
 		expect(evaluate('string(undefined, "foo")')).toBe("foo");
 		expect(evaluate("float(undefined, 19.84)")).toBe(19.84);
@@ -174,18 +181,16 @@ describe("conversions", () => {
 	});
 
 	test("bytes converts, and a lone int allocates", () => {
-		expect([...(evaluate('bytes("foo")') as Uint8Array)]).toEqual([
-			102, 111, 111,
-		]);
+		expect([...(evaluate('bytes("foo")') as Uint8Array)]).toEqual([102, 111, 111]);
 		expect((evaluate("bytes(4)") as Uint8Array).length).toBe(4);
 		expect(evaluate('string(bytes("foo"))')).toBe("foo");
 	});
 
 	test("time reads an int as Unix seconds", () => {
 		expect(evaluate("is_time(time(1257894000))")).toBe(true);
-		expect(
-			(evaluate("time(1257894000)") as Date).toISOString(),
-		).toBe("2009-11-10T23:00:00.000Z");
+		expect((evaluate("time(1257894000)") as Date).toISOString()).toBe(
+			"2009-11-10T23:00:00.000Z",
+		);
 		expect(evaluate('time("x")')).toBeUndefined();
 	});
 });
@@ -248,7 +253,7 @@ describe("type_name", () => {
 describe("freeze", () => {
 	test("freezes every container in the tree", () => {
 		const source = [
-			"config := freeze({limits: {max: 3}, tags: [\"prod\"]})",
+			'config := freeze({limits: {max: 3}, tags: ["prod"]})',
 			"out := [",
 			"  is_immutable_map(config),",
 			"  is_immutable_map(config.limits),",
@@ -277,7 +282,7 @@ describe("format", () => {
 		expect(evaluate('format("%#x", 255)')).toBe("0xff");
 		expect(evaluate('format("%c", 89)')).toBe("Y");
 		expect(evaluate('format("%U", 120)')).toBe("U+0078");
-		expect(evaluate('format("%#U", 120)')).toBe("U+0078 \'x\'");
+		expect(evaluate('format("%#U", 120)')).toBe("U+0078 'x'");
 		expect(evaluate('format("%+d", 42)')).toBe("+42");
 		expect(evaluate('format("%05d", 42)')).toBe("00042");
 		expect(evaluate('format("%-5d|", 42)')).toBe("42   |");

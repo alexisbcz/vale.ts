@@ -294,21 +294,22 @@ export function qdocInline(textArg: string): string {
 			break;
 		}
 
-		const whole = group(m, 0);
-		out += qdocEsc(text.slice(0, whole[0]));
+		const from = m.index;
+		const to = m.index + m[0].length;
+		out += qdocEsc(text.slice(0, from));
 
 		const nameSpan = group(m, 1);
 		if (nameSpan === null) {
 			// `\\` is a literal backslash, not a command.
 			out += "\\";
-			text = text.slice(whole[1]);
+			text = text.slice(to);
 			continue;
 		}
 
 		const name = text.slice(nameSpan[0], nameSpan[1]);
 		const argSpan = group(m, 3);
 		const arg = argSpan === null ? "" : text.slice(argSpan[0], argSpan[1]);
-		let rest = text.slice(whole[1]);
+		let rest = text.slice(to);
 
 		switch (name) {
 			case "c":

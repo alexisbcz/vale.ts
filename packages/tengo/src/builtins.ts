@@ -266,8 +266,3 @@ function build(): Map<string, Value> {
 }
 
 export const BUILTINS: ReadonlyMap<string, Value> = build();
-
-/** Whether `name` is a builtin, which the interpreter asks before erroring. */
-export function isBuiltin(name: string): boolean {
-	return BUILTINS.has(name);
-}

@@ -56,17 +56,18 @@ export function mathModule(): Value {
 
 	// Go's int is 64 bits wide, so maxInt and maxInt64 agree. Both exceed what
 	// a double represents exactly; they round, as they would anywhere else in
-	// this port.
-	intConstant("maxInt", 9223372036854775807);
-	intConstant("minInt", -9223372036854775808);
+	// this port, which is why they are spelled as powers rather than as
+	// literals a reader would expect to be exact.
+	intConstant("maxInt", 2 ** 63 - 1);
+	intConstant("minInt", -(2 ** 63));
 	intConstant("maxInt8", 127);
 	intConstant("minInt8", -128);
 	intConstant("maxInt16", 32767);
 	intConstant("minInt16", -32768);
 	intConstant("maxInt32", 2147483647);
 	intConstant("minInt32", -2147483648);
-	intConstant("maxInt64", 9223372036854775807);
-	intConstant("minInt64", -9223372036854775808);
+	intConstant("maxInt64", 2 ** 63 - 1);
+	intConstant("minInt64", -(2 ** 63));
 
 	/** A function over one float, returning a float. */
 	const f1 = (name: string, fn: (x: number) => number): void => {

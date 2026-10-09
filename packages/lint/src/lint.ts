@@ -135,6 +135,21 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 	/** `IgnoredScopes` as a matcher, built once. */
 	private ignored: ScopeMatcher | null = null;
 
+	/**
+	 * Whether a `dasel` or `textfsm` view reads this file.
+	 *
+	 * Set by the data reader when it registers itself. Either engine reads the
+	 * whole file for itself, so the file's own format does not matter; a
+	 * tree-sitter view is reached through the code reader instead.
+	 */
+	hasView: ((f: File) => boolean) | null = null;
+
+	/** Whether a tree-sitter view reads this file. */
+	hasCodeView: ((f: File) => boolean) | null = null;
+
+	/** Whether this file is a Vale rule, which has prose in two of its fields. */
+	isRuleFile: ((f: File) => boolean) | null = null;
+
 	constructor(manager: Manager) {
 		this.manager = manager;
 		const cfg = manager.config;
@@ -377,22 +392,67 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 		return { file, err, path: src };
 	}
 
-	/** Dispatches to the reader for this file's format. */
+	/**
+	 * Dispatches to the reader for this file.
+	 *
+	 * The order is the order Go tests the cases in, and it is load-bearing. A
+	 * view comes first, because a view says what a file's prose is whatever the
+	 * file is called -- without that, a `.jsonl` or a `.log` that a section
+	 * matched was linted whole and the view never ran. A Vale rule comes before
+	 * the data readers, because its message and description are prose while its
+	 * tokens and swaps are patterns, often wrong on purpose. And a data file
+	 * that a tree-sitter view names is read as code, so the view's queries
+	 * reach its comments.
+	 *
+	 * `--simple` turns all of it off: the file is read as lines, which is what
+	 * the flag is for.
+	 */
 	private read(file: File): void {
 		const simple = this.flags.simple;
+
+		if (!simple && this.hasView?.(file) === true) {
+			this.readers.get("data")?.(file);
+			return;
+		}
 
 		const reader = this.readers.get(file.normedExt);
 		if (!simple && file.format === "markup" && reader !== undefined) {
 			reader(file);
 			return;
 		}
-		if (!simple && file.format === "fragment") {
-			const fragments = this.readers.get("fragment");
-			if (fragments !== undefined) {
-				fragments(file);
+
+		if (!simple && this.isRuleFile?.(file) === true) {
+			const rule = this.readers.get("rule");
+			if (rule !== undefined) {
+				rule(file);
 				return;
 			}
 		}
+
+		if (
+			!simple &&
+			file.format === "data" &&
+			this.hasCodeView?.(file) === true
+		) {
+			const code = this.readers.get("code");
+			if (code !== undefined) {
+				code(file);
+				return;
+			}
+		}
+
+		if (
+			!simple &&
+			file.format === "data" &&
+			Object.keys(this.config.views).length > 0
+		) {
+			const data = this.readers.get("data");
+			if (data !== undefined) {
+				data(file);
+				return;
+			}
+		}
+
 		if (!simple && file.format === "code") {
 			const code = this.readers.get("code");
 			if (code !== undefined) {
@@ -400,17 +460,20 @@ export class Linter implements ReaderHost, MarkdownHost, MetadataHost, ScopedHos
 				return;
 			}
 		}
-		if (!simple && file.format === "data") {
-			const data = this.readers.get("data");
-			if (data !== undefined) {
-				data(file);
+
+		if (!simple && file.format === "fragment") {
+			const fragments = this.readers.get("fragment");
+			if (fragments !== undefined) {
+				fragments(file);
 				return;
 			}
 		}
+
 		if (!simple && file.normedExt === ".txt") {
 			this.lintTxt(file);
 			return;
 		}
+
 		this.lintLines(file);
 	}
 

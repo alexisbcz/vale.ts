@@ -31,6 +31,9 @@ export const italic = (s: string): string => sgr("3", s);
 export const underline = (s: string): string => sgr("4", s);
 export const onRed = (s: string): string => sgr("41", s);
 
+/** Green and bold, which is how an error's excerpt numbers its lines. */
+export const sgrGreenBold = (s: string): string => sgr("32;1", s);
+
 /**
  * `pterm.Fuzzy`, which Vale uses for anything the reader would type back --
  * a flag, a command, a path.

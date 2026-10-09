@@ -31,9 +31,7 @@ describe("literals", () => {
 	});
 
 	test("a literal may span lines", () => {
-		expect(
-			runFor("out := [\n\t1,\n\t2,\n]", "out"),
-		).toEqual([1, 2]);
+		expect(runFor("out := [\n\t1,\n\t2,\n]", "out")).toEqual([1, 2]);
 		expect(runFor("out := {\n\ta: 1,\n\tb: 2,\n}", "out")).toEqual({
 			a: 1,
 			b: 2,
@@ -108,7 +106,10 @@ describe("operators", () => {
 	test("the ternary operator", () => {
 		expect(evaluate("true ? 1 : -1")).toBe(1);
 		expect(
-			runFor("min := func(a, b) { return a < b ? a : b }\nout := min(5, 10)", "out"),
+			runFor(
+				"min := func(a, b) { return a < b ? a : b }\nout := min(5, 10)",
+				"out",
+			),
 		).toBe(5);
 	});
 
@@ -174,16 +175,12 @@ describe("declarations and assignment", () => {
 	test(":= declares and = assigns", () => {
 		expect(runFor("a := 1\na = 2\nout := a", "out")).toBe(2);
 		expect(() => Script.compile("a := 1\na := 2")).not.toThrow();
-		expect(() => runFor("a := 1\na := 2\nout := a", "out")).toThrow(
-			TengoError,
-		);
+		expect(() => runFor("a := 1\na := 2\nout := a", "out")).toThrow(TengoError);
 		expect(() => runFor("b = 1\nout := b", "out")).toThrow(TengoError);
 	});
 
 	test("a variable may be reassigned a different type", () => {
-		expect(runFor('a := 123\na = "123"\na = [1]\nout := a', "out")).toEqual([
-			1,
-		]);
+		expect(runFor('a := 123\na = "123"\na = [1]\nout := a', "out")).toEqual([1]);
 	});
 
 	test("the compound assignments", () => {
@@ -262,15 +259,11 @@ describe("for", () => {
 	});
 
 	test("condition only", () => {
-		expect(
-			runFor("a := 0\nout := 0\nfor a < 5 { out += a\na++ }", "out"),
-		).toBe(10);
+		expect(runFor("a := 0\nout := 0\nfor a < 5 { out += a\na++ }", "out")).toBe(10);
 	});
 
 	test("no header, left by break", () => {
-		expect(
-			runFor("out := 0\nfor { out++\nif out == 3 { break } }", "out"),
-		).toBe(3);
+		expect(runFor("out := 0\nfor { out++\nif out == 3 { break } }", "out")).toBe(3);
 	});
 
 	test("break and continue", () => {
@@ -313,7 +306,7 @@ describe("for ... in", () => {
 	test("over a map, in insertion order", () => {
 		expect(
 			runFor(
-				'out := []\nfor k, v in {k1: 1, k2: 2} { out = append(out, k + string(v)) }',
+				"out := []\nfor k, v in {k1: 1, k2: 2} { out = append(out, k + string(v)) }",
 				"out",
 			),
 		).toEqual(["k11", "k22"]);
@@ -342,9 +335,9 @@ describe("for ... in", () => {
 	});
 
 	test("a loop body may shadow the loop variable", () => {
-		expect(
-			runFor("out := 0\nfor v in [1, 2] { v := 9\nout += v }", "out"),
-		).toBe(18);
+		expect(runFor("out := 0\nfor v in [1, 2] { v := 9\nout += v }", "out")).toBe(
+			18,
+		);
 	});
 
 	test("something that is not iterable is an error", () => {
@@ -378,7 +371,10 @@ describe("functions", () => {
 
 	test("variadic parameters", () => {
 		expect(
-			runFor("f := func(a, b, ...c) { return [a, b, c] }\nout := f(1, 2, 3, 4)", "out"),
+			runFor(
+				"f := func(a, b, ...c) { return [a, b, c] }\nout := f(1, 2, 3, 4)",
+				"out",
+			),
 		).toEqual([1, 2, [3, 4]]);
 		expect(
 			runFor("f := func(a, ...b) { return [a, b] }\nout := f(1)", "out"),
@@ -402,10 +398,16 @@ describe("functions", () => {
 
 	test("an array spreads into the last parameter", () => {
 		expect(
-			runFor("f := func(a, b, c) { return a + b + c }\nout := f([1, 2, 3]...)", "out"),
+			runFor(
+				"f := func(a, b, c) { return a + b + c }\nout := f([1, 2, 3]...)",
+				"out",
+			),
 		).toBe(6);
 		expect(
-			runFor("f := func(a, b, c) { return a + b + c }\nout := f(1, [2, 3]...)", "out"),
+			runFor(
+				"f := func(a, b, c) { return a + b + c }\nout := f(1, [2, 3]...)",
+				"out",
+			),
 		).toBe(6);
 		expect(
 			runFor("f := func(a, ...b) { return [a, b] }\nout := f([1, 2, 3]...)", "out"),
@@ -428,9 +430,9 @@ describe("functions", () => {
 	});
 
 	test("runaway recursion is reported rather than crashing", () => {
-		expect(() =>
-			runFor("f := func() { return f() }\nout := f()", "out"),
-		).toThrow(TengoError);
+		expect(() => runFor("f := func() { return f() }\nout := f()", "out")).toThrow(
+			TengoError,
+		);
 	});
 });
 
@@ -457,9 +459,9 @@ describe("immutability", () => {
 		expect(() => runFor("a := immutable([1])\na[0] = 2\nout := a", "out")).toThrow(
 			TengoError,
 		);
-		expect(() => runFor("m := immutable({a: 1})\nm.a = 2\nout := m", "out")).toThrow(
-			TengoError,
-		);
+		expect(() =>
+			runFor("m := immutable({a: 1})\nm.a = 2\nout := m", "out"),
+		).toThrow(TengoError);
 	});
 
 	test("rebinding the name is unrelated to the value", () => {
@@ -471,16 +473,16 @@ describe("immutability", () => {
 			runFor("a := immutable({b: 4, c: [1, 2, 3]})\na.c[1] = 5\nout := a.c", "out"),
 		).toEqual([1, 5, 3]);
 		expect(() =>
-			runFor(
-				"a := immutable({c: immutable([1, 2])})\na.c[1] = 5\nout := a",
-				"out",
-			),
+			runFor("a := immutable({c: immutable([1, 2])})\na.c[1] = 5\nout := a", "out"),
 		).toThrow(TengoError);
 	});
 
 	test("copy gives back a mutable value", () => {
 		expect(
-			runFor("a := immutable([1, 2])\nb := copy(a)\nb[0] = 9\nout := [a, b]", "out"),
+			runFor(
+				"a := immutable([1, 2])\nb := copy(a)\nb[0] = 9\nout := [a, b]",
+				"out",
+			),
 		).toEqual([
 			[1, 2],
 			[9, 2],

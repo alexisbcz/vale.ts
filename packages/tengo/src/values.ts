@@ -361,8 +361,12 @@ export function display(v: Value): string {
 			return "<undefined>";
 		case "error":
 			return `error: ${display(v.value)}`;
-		case "time":
-			return new Date(v.value).toISOString();
+		case "time": {
+			// Go's `Time.String()`; everything here is built from a Unix
+			// timestamp, so the zone is always UTC.
+			const iso = new Date(v.value).toISOString();
+			return `${iso.slice(0, 10)} ${iso.slice(11, 19)} +0000 UTC`;
+		}
 		case "func":
 			return v.literal ? "<compiled-function>" : `<${typeName(v)}>`;
 	}
@@ -729,13 +733,6 @@ export function argMap(args: Value[], i: number): MapValue {
 	const v = args[i];
 	if (v === undefined) throw wrongArgs();
 	if (v.kind !== "map") throw argTypeError(ordinal(i), "map", v);
-	return v;
-}
-
-export function argFunc(args: Value[], i: number): FuncValue {
-	const v = args[i];
-	if (v === undefined) throw wrongArgs();
-	if (v.kind !== "func") throw argTypeError(ordinal(i), "function", v);
 	return v;
 }
 
