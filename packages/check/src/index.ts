@@ -109,6 +109,7 @@ export { Occurrence } from "./occurrence.ts";
 export { patternError } from "./pattern-error.ts";
 export { Readability } from "./readability.ts";
 export { Repetition } from "./repetition.ts";
+export type { ScopeMatcher } from "./scope.ts";
 export {
 	cachedSelector,
 	docID,

@@ -283,14 +283,33 @@ export const xdg = {
 
 	/** The path a configuration file would have, whether or not it exists. */
 	configFile(rel: string): string {
-		return path.join(xdg.configHome(), rel);
+		return reserve(path.join(xdg.configHome(), rel));
 	},
 
 	/** The path a data file would have, whether or not it exists. */
 	dataFile(rel: string): string {
-		return path.join(xdg.dataHome(), rel);
+		return reserve(path.join(xdg.dataHome(), rel));
 	},
 };
+
+/**
+ * Makes sure the directory holding `file` exists, and returns `file`.
+ *
+ * `adrg/xdg`, which Go asks for these paths, creates the parent directory as
+ * part of answering, and Vale leans on that: the default `StylesPath` is the
+ * directory of `vale/styles/config.yml`, and a configuration carries it only
+ * when it is a directory -- so without this a fresh install has no default
+ * `StylesPath` at all, and `sync` has nowhere to write.
+ */
+function reserve(file: string): string {
+	try {
+		mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+	} catch {
+		// A read-only home is not a reason to refuse to lint; the caller tests
+		// whether the path is a directory before using it.
+	}
+	return file;
+}
 
 /** `p` relative to the working directory when it is inside it. */
 export function relToWD(p: string): string {

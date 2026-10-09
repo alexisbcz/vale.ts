@@ -192,7 +192,7 @@ export function leadingMask(text: string, name: string): Mask | null {
  * The name a Go doc comment is expected to open with: that of the declaration
  * it precedes, or `Package name` for a package clause.
  */
-export function goDocName(n: Node, _src: string): string {
+export function goDocName(n: Node): string {
 	const next = n.nextNamedSibling;
 	if (next === null) return "";
 

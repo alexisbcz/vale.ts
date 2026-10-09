@@ -183,6 +183,12 @@ function partMatches(
 	return true;
 }
 
+/**
+ * What a caller needs of a compiled scope: whether it reaches a block, and
+ * which inline scopes it leaves out.
+ */
+export type ScopeMatcher = Pick<Scope, "matches" | "excluded">;
+
 /** A rule's scope, compiled once per set of expressions. */
 export function newScope(value: readonly string[]): Scope {
 	const key = value.join("\u0000");

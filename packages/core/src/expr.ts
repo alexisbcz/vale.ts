@@ -26,32 +26,143 @@ export class ExprError extends Error {
 	}
 }
 
+/** How an expression is compiled. */
+export interface CompileOptions {
+	/**
+	 * Require the expression to be usable as a condition.
+	 *
+	 * Go passes `expr.AsBool()`, which refuses an expression whose static type
+	 * is something other than a boolean, so `[*.md if "text"]` is reported when
+	 * the configuration loads rather than read as always true. Only a type that
+	 * is *known* is refused; a member access reads a value of unknown type and
+	 * is judged by its truthiness, which is the whole point of `.Meta.draft`.
+	 */
+	asBool?: boolean;
+}
+
 /** A compiled expression. */
 export class Expression {
 	readonly source: string;
 	private readonly node: Node;
 
-	constructor(source: string) {
+	constructor(source: string, options: CompileOptions = {}) {
 		this.source = source;
 		const parser = new Parser(source);
 		this.node = parser.parseExpression(0);
 		parser.expectEnd();
+
+		if (options.asBool === true) {
+			const kind = staticKind(this.node);
+			if (kind !== "bool" && kind !== "unknown") {
+				throw new ExprError(`expected a condition, found a ${kind}`);
+			}
+		}
 	}
 
-	/** Evaluates the expression against `env`. */
-	run(env: Environment): Value {
-		return evaluate(this.node, env, undefined);
+	/**
+	 * Evaluates the expression against `env`.
+	 *
+	 * `item` is what a leading dot addresses -- the element under
+	 * consideration, which is `#` inside a closure. A caller evaluating an
+	 * expression that was *written* as a predicate, as a section's `if` is,
+	 * passes the item itself.
+	 */
+	run(env: Environment, item?: Value): Value {
+		return evaluate(this.node, env, item);
 	}
 
 	/** Evaluates it and reads the result as a boolean. */
-	runBool(env: Environment): boolean {
-		return truthy(this.run(env));
+	runBool(env: Environment, item?: Value): boolean {
+		return truthy(this.run(env, item));
 	}
 }
 
 /** Compiles an expression, throwing `ExprError` if it cannot be read. */
-export function compileExpr(source: string): Expression {
-	return new Expression(source);
+export function compileExpr(
+	source: string,
+	options: CompileOptions = {},
+): Expression {
+	return new Expression(source, options);
+}
+
+/** What an expression's value is known to be, or "unknown". */
+type StaticKind = "bool" | "number" | "string" | "array" | "map" | "unknown";
+
+/** The builtins whose return type is fixed. */
+const RETURN_KINDS: Record<string, StaticKind> = {
+	any: "bool",
+	all: "bool",
+	none: "bool",
+	one: "bool",
+	filter: "array",
+	map: "array",
+	split: "array",
+	len: "number",
+	int: "number",
+	float: "number",
+	abs: "number",
+	max: "number",
+	min: "number",
+	lower: "string",
+	upper: "string",
+	trim: "string",
+	join: "string",
+	string: "string",
+	hasPrefix: "bool",
+	hasSuffix: "bool",
+};
+
+/** The operators whose result type is fixed. */
+const OPERATOR_KINDS: Record<string, StaticKind> = {
+	"==": "bool",
+	"!=": "bool",
+	"<": "bool",
+	">": "bool",
+	"<=": "bool",
+	">=": "bool",
+	and: "bool",
+	"&&": "bool",
+	or: "bool",
+	"||": "bool",
+	in: "bool",
+	matches: "bool",
+	contains: "bool",
+	startsWith: "bool",
+	endsWith: "bool",
+	"-": "number",
+	"*": "number",
+	"/": "number",
+	"%": "number",
+	"**": "number",
+};
+
+function staticKind(node: Node): StaticKind {
+	switch (node.kind) {
+		case "literal": {
+			const v = node.value;
+			if (typeof v === "boolean") return "bool";
+			if (typeof v === "number") return "number";
+			if (typeof v === "string") return "string";
+			return "unknown";
+		}
+		case "array":
+			return "array";
+		case "map":
+			return "map";
+		case "unary":
+			return node.op === "!" || node.op === "not" ? "bool" : "number";
+		case "binary":
+			// `??` and `+` both depend on their operands, so they stay unknown.
+			return OPERATOR_KINDS[node.op] ?? "unknown";
+		case "call":
+			return RETURN_KINDS[node.name] ?? "unknown";
+		case "conditional": {
+			const then = staticKind(node.then);
+			return then === staticKind(node.otherwise) ? then : "unknown";
+		}
+		default:
+			return "unknown";
+	}
 }
 
 /**

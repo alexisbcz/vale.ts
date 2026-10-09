@@ -54,15 +54,20 @@ export class Condition {
 
 	constructor(source: string) {
 		this.source = source;
-		this.program = compileExpr(source);
+		// Go compiles `any(Files, {<source>})` with `expr.AsBool()`: the
+		// condition is written as a predicate over one file, and an expression
+		// that cannot be a boolean is refused here rather than silently read as
+		// true for every file.
+		this.program = compileExpr(source, { asBool: true });
 		this.readsMeta = source.includes(".Meta");
 	}
 
 	/** Whether the condition is true for the given file. */
 	holds(f: FileFields): boolean {
 		// The fields are the item under consideration, which is what a leading
-		// dot addresses -- the same shape as Vale's `any(Files, {...})`.
-		return this.program.runBool({ Files: [f], ...asEnv(f) });
+		// dot addresses -- the same shape as Vale's `any(Files, {...})`, where
+		// the predicate's `#` is the one file in `Files`.
+		return this.program.runBool({ Files: [f], ...asEnv(f) }, f);
 	}
 }
 

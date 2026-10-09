@@ -35,6 +35,7 @@ import {
 
 const HERE = path.dirname(new URL(import.meta.url).pathname);
 const CLI = path.join(HERE, "..", "..", "packages", "cli", "src", "main.ts");
+const INPROC = path.join(HERE, "inproc.ts");
 
 /** What one case came to. */
 export interface Outcome {
@@ -68,6 +69,13 @@ export interface Options {
 	report: string;
 	/** Print each case as it runs. */
 	verbose: boolean;
+	/**
+	 * Call the engine directly instead of the command line.
+	 *
+	 * A case that fails both ways is an engine difference; one that fails only
+	 * through the CLI is in the argument handling or the output format.
+	 */
+	inproc: boolean;
 	/**
 	 * Run the reference binary *as* the implementation under test.
 	 *
@@ -139,7 +147,7 @@ export function runCase(suite: Suite, kase: Case, opts: Options): Outcome {
 	if (kase.sync) {
 		// `sync` downloads packages, so it needs the network and must run before
 		// the case rather than as part of it.
-		const synced = invoke(["sync"], dir, kase, opts.selfCheck);
+		const synced = invoke(["sync"], dir, kase, opts.selfCheck, opts.inproc);
 		if (synced.code !== 0) {
 			return {
 				...base,
@@ -149,7 +157,13 @@ export function runCase(suite: Suite, kase: Case, opts: Options): Outcome {
 		}
 	}
 
-	const ours = invoke([...SHARED_FLAGS, ...kase.args], dir, kase, opts.selfCheck);
+	const ours = invoke(
+		[...SHARED_FLAGS, ...kase.args],
+		dir,
+		kase,
+		opts.selfCheck,
+		opts.inproc,
+	);
 	const outcome: Outcome = { ...base, got: ours.out, gotExit: ours.code };
 
 	if (opts.reference) {
@@ -221,9 +235,11 @@ function invoke(
 	dir: string,
 	kase: Case,
 	reference: boolean,
+	inproc = false,
 ): { out: string; code: number } {
 	const cmd = reference ? REFERENCE : "bun";
-	const argv = reference ? [...args] : [CLI, ...args];
+	const entry = inproc ? INPROC : CLI;
+	const argv = reference ? [...args] : [entry, ...args];
 
 	const result = spawnSync(cmd, argv, {
 		cwd: dir,
@@ -393,6 +409,7 @@ function parseOptions(argv: readonly string[]): Options {
 		strict: process.env.VALE_COMPAT_STRICT !== undefined,
 		report: "",
 		verbose: argv.includes("--verbose") || argv.includes("-v"),
+		inproc: argv.includes("--inproc"),
 		selfCheck: argv.includes("--self-check"),
 	};
 

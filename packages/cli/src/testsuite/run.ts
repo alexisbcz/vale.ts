@@ -319,11 +319,15 @@ export function compare(c: Case, got: string): string {
 	}
 
 	for (const want of c.contains) {
-		if (!got.includes(want)) return `output does not contain "${want}"`;
+		if (!got.includes(want)) {
+			return `output does not contain ${JSON.stringify(want)}`;
+		}
 	}
 
 	for (const absent of c.absent) {
-		if (got.includes(absent)) return `output contains "${absent}"`;
+		if (got.includes(absent)) {
+			return `output contains ${JSON.stringify(absent)}`;
+		}
 	}
 
 	return "";

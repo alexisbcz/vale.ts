@@ -235,11 +235,19 @@ export function dirName(p: string): string {
 	return norm.slice(0, i);
 }
 
-/** The file's extension, dot included, or "". */
+/**
+ * The file's extension, dot included, or "".
+ *
+ * Go's `filepath.Ext` is the suffix from the final dot of the final path
+ * element, and that includes a leading one: `.md` is an extension, not a
+ * dotfile with no extension, which is what makes `--ext=.md` work and what
+ * `[formats]` keys are matched against. Node's `path.extname` disagrees, so
+ * this does not use it.
+ */
 export function extName(p: string): string {
 	const base = baseName(p);
 	const i = base.lastIndexOf(".");
-	return i <= 0 ? "" : base.slice(i);
+	return i < 0 ? "" : base.slice(i);
 }
 
 /** `to` expressed relative to `from`, with forward slashes. */

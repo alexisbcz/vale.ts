@@ -1,0 +1,17 @@
+extends: capitalization
+message: "'%s' should be sentence-cased"
+level: warning
+scope: heading
+match: $sentence
+exceptions:
+  - Section
+  - Level
+  - Title
+  - Azure
+  - Axon
+  - Axon Framework
+  - Axon Server
+  - Axon Synapse
+indicators:
+  - ":"
+prefix: '^[a-z]\.\s'

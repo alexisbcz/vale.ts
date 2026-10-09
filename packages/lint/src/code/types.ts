@@ -97,7 +97,7 @@ export interface Language {
 	 * The name a documentation comment is expected to open with, read from the
 	 * node it precedes; null for a language with no such convention.
 	 */
-	docName: ((n: Node, src: string) => string) | null;
+	docName: ((n: Node) => string) | null;
 	/** The tree-sitter grammar, or null for a language read by the scanner. */
 	grammar: Grammar | null;
 	/** The comment delimiters, for a language with no grammar. */

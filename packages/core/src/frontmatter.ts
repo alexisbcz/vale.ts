@@ -7,7 +7,14 @@
  */
 
 import { parse as parseTOML } from "smol-toml";
-import { type Document, isMap, isScalar, parseDocument } from "yaml";
+import {
+	type Document,
+	isMap,
+	isScalar,
+	parseDocument,
+	type Scalar,
+} from "yaml";
+import { blockScalarContentStart } from "./structured.ts";
 
 /** The delimiters a front-matter block may be wrapped in. */
 const DELIMITERS: Array<[string, string, "yaml" | "toml" | "json"]> = [
@@ -164,6 +171,7 @@ export function frontMatterValues(fm: string): ScopedValues[] {
 	for (const item of root.items) {
 		const value = item.value;
 		if (!isScalar(value) || typeof value.value !== "string") continue;
+		if (isTimestamp(value)) continue;
 		const key = isScalar(item.key) ? String(item.key.value) : null;
 		if (key === null) continue;
 
@@ -171,10 +179,57 @@ export function frontMatterValues(fm: string): ScopedValues[] {
 		const at = range ? range[0] : 0;
 		found.push({
 			scope: `frontmatter.${key}`,
-			values: [{ text: value.value, ...positionOf(source, at) }],
+			values: [{ text: value.value, ...contentStart(source, lines, value, at) }],
 		});
 	}
 	return found;
+}
+
+/**
+ * Where a scalar's *content* starts, which is not where its token starts.
+ *
+ * A quoted scalar's position has to step past the opening quote and a block
+ * scalar's has to step down onto its first content line, or an alert on
+ * `title: "Some text"` lands on the quote rather than on the text. This is
+ * what `scalarAt` does for a view's values, and front matter is placed the
+ * same way.
+ */
+function contentStart(
+	source: string,
+	lines: readonly string[],
+	node: Scalar,
+	at: number,
+): { line: number; column: number } {
+	const marker = positionOf(source, at);
+	switch (node.type) {
+		case "BLOCK_LITERAL":
+		case "BLOCK_FOLDED": {
+			const [line, column] = blockScalarContentStart(lines, marker.line);
+			return { line, column };
+		}
+		case "QUOTE_DOUBLE":
+		case "QUOTE_SINGLE":
+			return { line: marker.line, column: marker.column + 1 };
+		default:
+			return marker;
+	}
+}
+
+/**
+ * The shapes `yaml.v3` resolves as `!!timestamp` rather than `!!str`.
+ *
+ * Go keeps only a field whose tag is `!!str`, so a `date: 2024-01-01` is left
+ * out -- it is metadata, not prose, and nothing should report on it. The
+ * JavaScript parser has no timestamp type in its default schema and hands back
+ * a plain string, so the shapes are recognized here instead.
+ */
+const TIMESTAMP =
+	/^\d{4}-\d{1,2}-\d{1,2}(?:[Tt ]\d{1,2}:\d{1,2}:\d{1,2}(?:\.\d+)?[ \t]*(?:Z|[-+]\d{1,2}(?::?\d{2})?)?)?$/;
+
+function isTimestamp(node: Scalar): boolean {
+	// Only a plain scalar resolves to a tag; quoting one says it is a string.
+	if (node.type !== undefined && node.type !== "PLAIN") return false;
+	return TIMESTAMP.test(String(node.value));
 }
 
 /** The 1-based line and column of an offset into `source`. */

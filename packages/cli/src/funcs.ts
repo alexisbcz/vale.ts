@@ -172,8 +172,8 @@ export const FUNCS: Record<string, TemplateFunc> = {
 			.trim(),
 	plural: (one, many, count) => (num(count) === 1 ? text(one) : text(many)),
 	printf: (format, ...args) => sprintf(text(format), args),
-	toString: (a) => text(a),
-	toJson: (a) => getJSON(a),
+	toString: (a: unknown) => text(a),
+	toJson: (a: unknown) => getJSON(a),
 
 	// --- lists -------------------------------------------------------------
 

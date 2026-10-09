@@ -933,7 +933,7 @@ const STRUCTURAL_KEYS = [
  * Parameters apply when the rule compiles, so unlike levels they hold wherever
  * the rule runs.
  */
-function asRuleParam(key: string, val: string, cfg: Config): boolean {
+export function asRuleParam(key: string, val: string, cfg: Config): boolean {
 	const groups = RULE_PARAM.exec(key);
 	if (groups === null) return false;
 

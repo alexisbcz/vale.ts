@@ -58,8 +58,10 @@
         "@vale-ts/check": "workspace:*",
         "@vale-ts/core": "workspace:*",
         "@vale-ts/lint": "workspace:*",
+        "@vale-ts/nlp": "workspace:*",
         "fflate": "^0.8.3",
         "vale-ts": "workspace:*",
+        "yaml": "2.8.1",
       },
     },
     "packages/core": {

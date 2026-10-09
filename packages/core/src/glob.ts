@@ -129,12 +129,11 @@ function compilePattern(pattern: string, crossesSeparators: boolean): string {
 				break;
 
 			case "[": {
+				// A class that never closes, or whose ranges are malformed, is
+				// reported rather than read as a literal `[`. `Glob.match`
+				// cannot report it, which is how `--glob='[a-]*'` used to
+				// compile with `MustCompile` and panic partway through a walk.
 				const cls = readClass(pattern, i);
-				if (cls === null) {
-					out += "\\[";
-					i++;
-					break;
-				}
 				out += cls.source;
 				i = cls.next;
 				break;
@@ -177,11 +176,21 @@ function compilePattern(pattern: string, crossesSeparators: boolean): string {
 	return out;
 }
 
-/** Reads a `[...]` class starting at `i`, or null if it never closes. */
-function readClass(
-	pattern: string,
-	i: number,
-): { source: string; next: number } | null {
+/**
+ * Reads a `[...]` class starting at `i`.
+ *
+ * Throws for a class the glob libraries reject, which is the only place a
+ * pattern can be found invalid. Two shapes matter, because `gobwas/glob`
+ * refuses both while `doublestar` accepts them:
+ *
+ *  - a range with nothing after its `-`, as in `[a-]`, where the `]` is read
+ *    as the range's upper bound and the class then never closes;
+ *  - a `-` where the class expected to close, as in `[a-b-c]`.
+ *
+ * A class that never closes at all is refused too, since `doublestar` reports
+ * that one as a bad pattern.
+ */
+function readClass(pattern: string, i: number): { source: string; next: number } {
 	let j = i + 1;
 	let negated = false;
 	if (pattern[j] === "!" || pattern[j] === "^") {
@@ -195,11 +204,22 @@ function readClass(
 		j++;
 	}
 
+	// Where the first item of the class sits, so that `[a-]` -- whose `-`
+	// cannot be anything but a range separator -- is told apart from `[abc-]`,
+	// whose trailing `-` is a literal.
+	const start = j;
+
+	// Whether the item just read was a range, so a `-` that follows is the
+	// `[a-b-c]` case rather than a literal dash.
+	let afterRange = false;
+
 	for (; j < pattern.length; j++) {
 		const c = pattern[j]!;
 		if (c === "]") {
 			// A class cannot be empty, and `[]` is not one.
-			if (body === "") return null;
+			if (body === "") {
+				throw new Error(`invalid glob '${pattern}': empty character class`);
+			}
 			return {
 				source: `[${negated ? "^" : ""}${body}]`,
 				next: j + 1,
@@ -210,6 +230,7 @@ function readClass(
 			if (next === undefined) break;
 			body += escapeInClass(next);
 			j++;
+			afterRange = false;
 			continue;
 		}
 		if (c === "[" && pattern[j + 1] === ":") {
@@ -220,23 +241,38 @@ function readClass(
 				if (ranges !== undefined) {
 					body += ranges;
 					j = close + 1;
+					afterRange = false;
 					continue;
 				}
 			}
 		}
-		if (
-			c === "-" &&
-			body !== "" &&
-			pattern[j + 1] !== "]" &&
-			pattern[j + 1] !== undefined
-		) {
-			body += "-";
+		if (c === "-" && body !== "") {
+			if (afterRange) {
+				throw new Error(
+					`invalid glob '${pattern}': expected the character class to close after a range`,
+				);
+			}
+			const hi = pattern[j + 1];
+			if (hi === "]" && j === start + 1) {
+				throw new Error(`invalid glob '${pattern}': a range needs an upper bound`);
+			}
+			if (hi !== undefined && hi !== "]") {
+				body += "-";
+				continue;
+			}
+			// A `-` with nothing after it to bound a range is a literal, which
+			// is how `[abc-]` reads.
+			body += "\\-";
+			afterRange = false;
 			continue;
 		}
 		body += escapeInClass(c);
+		// A `-` only reads as a range separator between two characters, so the
+		// item that just closed one is the one whose `-` preceded it.
+		afterRange = pattern[j - 1] === "-" && j - 1 > start;
 	}
 
-	return null;
+	throw new Error(`invalid glob '${pattern}': unterminated character class`);
 }
 
 const POSIX: Record<string, string> = {

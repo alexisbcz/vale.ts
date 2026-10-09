@@ -260,9 +260,10 @@ export function evalMath(
 
 	checkExpression(expr);
 
-	const script = tengo().Script.compile(BOILERPLATE.replace("%s", expr), {
-		modules: ["math"],
-	});
+	// Substituted through a function, so a `$` in the formula is text rather
+	// than a replacement pattern.
+	const program = BOILERPLATE.replace("%s", () => expr);
+	const script = tengo().Script.compile(program, { modules: ["math"] });
 
 	for (const [pk, pv] of Object.entries(params)) script.add(pk, pv);
 	script.add("round", round);
