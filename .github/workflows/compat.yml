@@ -25,7 +25,7 @@ jobs:
     name: Vale's own end-to-end suite
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: oven-sh/setup-bun@v2
         with:
@@ -43,7 +43,7 @@ jobs:
           python3 -m pip install --quiet docutils
           sudo gem install --no-document asciidoctor
 
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: tests/compat/.cache
           key: compat-${{ runner.os }}-${{ hashFiles('tests/compat/pinned.ts') }}
@@ -85,7 +85,7 @@ jobs:
         if: always()
         run: cat .artifacts/compat.md >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: compatibility-report
