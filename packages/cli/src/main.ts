@@ -16,12 +16,22 @@
  * single argument looks like a path that does not exist.
  */
 
-import type { Config } from "@vale-ts/core";
-import { fileExists, isDir, newE100, readPipeline, ValeError } from "@vale-ts/core";
+import type { Config, File } from "@vale-ts/core";
+import {
+	fileExists,
+	isDir,
+	newE100,
+	readPipeline,
+	ValeError,
+} from "@vale-ts/core";
 import { Manager } from "@vale-ts/check";
-import { createLinter, DocumentErrors, type Linter } from "@vale-ts/lint";
-import { initCode } from "./code.ts";
-import type { File } from "@vale-ts/core";
+import {
+	createLinter,
+	DocumentErrors,
+	initCode,
+	type Linter,
+} from "@vale-ts/lint";
+import { fstatSync } from "node:fs";
 import { COMMANDS } from "./command.ts";
 import { printAlerts } from "./common.ts";
 import { showError } from "./error.ts";
@@ -32,12 +42,23 @@ import { errorln, println, stderr, stdout } from "./out.ts";
 import { startProfiling } from "./profile.ts";
 import { didYouMean, reportUnknownCommand } from "./suggest.ts";
 import { TestFailed } from "./test.ts";
-import { configureColor, detectTerminal, isTTY } from "./tty.ts";
+import { configureColor, detectTerminal } from "./tty.ts";
 import { version } from "./version.ts";
 
-/** Whether something is being piped in. */
+/**
+ * Whether something is being piped in.
+ *
+ * Go asks whether stdin is a character device, which a terminal, `/dev/null`
+ * and `/dev/tty` all are: none of them is a document, so `vale` with no
+ * arguments shows its intro rather than waiting. `isTTY` answers a narrower
+ * question -- it is false for `/dev/null` -- so the device is read directly.
+ */
 function piped(): boolean {
-	return !isTTY(process.stdin);
+	try {
+		return !fstatSync(0).isCharacterDevice();
+	} catch {
+		return false;
+	}
 }
 
 /**
@@ -229,6 +250,12 @@ export async function run(argv: readonly string[]): Promise<number> {
 	} catch (err) {
 		if (err instanceof DocumentErrors) {
 			docErrs = err.errors;
+			// Go returns the files that did lint alongside the errors, so their
+			// alerts are printed before the failures. `DocumentErrors` carries
+			// only the errors today; the files are read here if it ever carries
+			// them, rather than this reporting half a run as none of it.
+			const alongside = (err as unknown as { files?: File[] }).files;
+			if (Array.isArray(alongside)) linted = alongside;
 		} else {
 			stopProfiling();
 			showError(err, flags.output, stderr);

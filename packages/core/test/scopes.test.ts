@@ -31,7 +31,7 @@ describe("loadScopes", () => {
 	test("reads every YAML file on the search paths", () => {
 		const cfg = scopeConfig({
 			"Sections.yml":
-				'methods: \'doc(section:has(> h2:contains("Methods")))\'\nlead: text & doc(h1 + p)\n',
+				"methods: 'doc(section:has(> h2:contains(\"Methods\")))'\nlead: text & doc(h1 + p)\n",
 			"More.yaml": 'results: doc(section:has(> h2:contains("Results")))\n',
 			// The same name with the same expression, from another file, is fine.
 			"Again.yml": "lead: text & doc(h1 + p)\n",
@@ -61,7 +61,11 @@ describe("loadScopes", () => {
 		{ name: "bad name", body: "'my scope': doc(h1)\n", want: "not a scope name" },
 		{ name: "empty", body: "methods: ''\n", want: "needs a scope" },
 		{ name: "conflict", body: "methods: doc(h1)\n---\n", want: "already defined" },
-		{ name: "not a mapping", body: "- methods\n", want: "a mapping of names to scopes" },
+		{
+			name: "not a mapping",
+			body: "- methods\n",
+			want: "a mapping of names to scopes",
+		},
 	];
 
 	test.each(rejects)("rejects $name", ({ name, body, want }) => {

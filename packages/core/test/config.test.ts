@@ -27,7 +27,12 @@ const FIXTURES = nodePath.join(import.meta.dir, "fixtures");
 const STYLES = nodePath.join(FIXTURES, "styles");
 
 /** The variables that would otherwise decide where the defaults live. */
-const OWNED = ["XDG_DATA_HOME", "XDG_CONFIG_HOME", "VALE_STYLES_PATH", "VALE_CONFIG_PATH"];
+const OWNED = [
+	"XDG_DATA_HOME",
+	"XDG_CONFIG_HOME",
+	"VALE_STYLES_PATH",
+	"VALE_CONFIG_PATH",
+];
 
 let saved: Record<string, string | undefined> = {};
 

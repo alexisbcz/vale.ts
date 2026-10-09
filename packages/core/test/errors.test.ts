@@ -71,12 +71,7 @@ describe("newE201FromKey", () => {
 	test("points at the key's line and the value's column", () => {
 		const ini = tempFile(".vale.ini", src);
 
-		const err = newE201FromKey(
-			[ini],
-			"BasedOnStyles",
-			(v) => v === "Nope",
-			"msg",
-		);
+		const err = newE201FromKey([ini], "BasedOnStyles", (v) => v === "Nope", "msg");
 
 		expect(err.code).toBe("E201");
 		expect(err.title()).toContain(`${ini.replaceAll("\\", "/")}:5:23]`);
@@ -87,12 +82,7 @@ describe("newE201FromKey", () => {
 	test("falls back to an E100 when no file sets the value", () => {
 		const ini = tempFile(".vale.ini", src);
 
-		const err = newE201FromKey(
-			[ini],
-			"BasedOnStyles",
-			(v) => v === "Other",
-			"msg",
-		);
+		const err = newE201FromKey([ini], "BasedOnStyles", (v) => v === "Other", "msg");
 
 		// Go asserts on the rendered `E100 [BasedOnStyles]` prefix; the port
 		// keeps the code and the context as fields.

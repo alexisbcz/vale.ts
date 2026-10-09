@@ -13,7 +13,7 @@
  * line still reports an alert on the right one.
  */
 
-import { isMap, isScalar, isSeq, parseDocument } from "yaml";
+import { isMap, isScalar, isSeq } from "yaml";
 import {
 	newPart,
 	newSource,
@@ -23,6 +23,7 @@ import {
 } from "./structured.ts";
 import { strLen } from "./util.ts";
 import type { Part, ScopedValue, ViewTarget } from "./view.ts";
+import { parseLenientDocument } from "./yaml.ts";
 
 /** One cell of a notebook. */
 export interface Cell {
@@ -71,10 +72,9 @@ export const KERNEL_EXTS: Readonly<Record<string, string>> = {
 
 /** Reads a `.ipynb` into its cells, in order. */
 export function parseNotebook(f: ViewTarget): Cell[] {
-	const doc = parseDocument(f.content);
-	if (doc.errors.length > 0) {
-		throw new Error(doc.errors[0]!.message);
-	}
+	// A notebook is JSON, which is YAML, and is read as leniently as every
+	// other YAML file Vale reads. See `yaml.ts`.
+	const doc = parseLenientDocument(f.content);
 	const root = doc.contents;
 	if (!isMap(root)) throw new Error("a notebook is a JSON object");
 

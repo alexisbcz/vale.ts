@@ -68,7 +68,12 @@ test("a punctuation-only match is anchored in its own block", () => {
 describe("insideInlineMarkup", () => {
 	const cases: Array<{ name: string; ctx: string; fs: number[]; want: boolean }> = [
 		{ name: "plain prose", ctx: "some ZQX here", fs: [5, 8], want: false },
-		{ name: "opening backtick beside match", ctx: "x `ZQX` y", fs: [3, 6], want: true },
+		{
+			name: "opening backtick beside match",
+			ctx: "x `ZQX` y",
+			fs: [3, 6],
+			want: true,
+		},
 		{
 			name: "closing backtick against match",
 			ctx: "x `f() # ZQX` and ZQX y",
@@ -435,7 +440,8 @@ test("locateMatch trusts the reader's placement", () => {
 // A block's later matches are located in that block, not in a later copy of
 // its text, although the earlier matches have been masked out of it.
 test("locateMatch reads the block through an earlier mask", () => {
-	const ctx = "######## here and iptables again.\n\niptables here and iptables again.\n";
+	const ctx =
+		"######## here and iptables again.\n\niptables here and iptables again.\n";
 	const txt = "iptables here and iptables again.";
 	const found = locate(
 		ctx,
@@ -451,13 +457,13 @@ test("locateMatch reads the block through an earlier mask", () => {
 // and the offset itself has to be carried over to the shortened context. See
 // #1184.
 test("locateMatch reads the block through a multi-character mask", () => {
-	const ctx = '"\'’\n\n”’';
+	const ctx = "\"'’\n\n”’";
 	const txt = "”’";
 
 	// Go masks at byte offset 7, where the `”` starts; counted in code units
 	// that is 5.
 	const masked = maskMatch(ctx, "”", 5);
-	expect(masked).toBe('"\'’\n\n#’');
+	expect(masked).toBe("\"'’\n\n#’");
 
 	expect(throughMask(masked.slice(5), txt)).toBe(true);
 	expect(throughMask("#x", "”y")).toBe(false);

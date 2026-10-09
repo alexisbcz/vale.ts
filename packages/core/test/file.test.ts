@@ -247,14 +247,24 @@ describe("level", () => {
 		compiled: string;
 		want: string;
 	}> = [
-		{ name: "the rule itself", rule: "Vale.Spelling", compiled: "error", want: "warning" },
+		{
+			name: "the rule itself",
+			rule: "Vale.Spelling",
+			compiled: "error",
+			want: "warning",
+		},
 		{
 			name: "its style",
 			rule: "proselint.Typography",
 			compiled: "error",
 			want: "suggestion",
 		},
-		{ name: "neither", rule: "Microsoft.Wordiness", compiled: "error", want: "error" },
+		{
+			name: "neither",
+			rule: "Microsoft.Wordiness",
+			compiled: "error",
+			want: "error",
+		},
 	];
 
 	test.each(cases)("$name", ({ rule, compiled, want }) => {

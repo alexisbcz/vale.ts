@@ -154,10 +154,7 @@ test("a package's StylesPath is dropped", () => {
 	const cfgPath = nodePath.join(project, ".vale.ini");
 	writeFileSync(cfgPath, "StylesPath = styles\n");
 
-	const cfg = readPipeline(
-		newFlags({ path: cfgPath, ignoreGlobal: true }),
-		false,
-	);
+	const cfg = readPipeline(newFlags({ path: cfgPath, ignoreGlobal: true }), false);
 
 	expect(cfg.paths).toEqual([styles]);
 	expect(cfg.gBaseStyles, "the package's other settings should still load").toEqual(

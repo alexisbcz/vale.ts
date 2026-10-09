@@ -17,9 +17,9 @@ import type { Config, File, ScopedValues } from "@vale-ts/core";
 import {
 	newE100,
 	newE201FromTarget,
+	tryParseLenient,
 	View,
 } from "@vale-ts/core";
-import { parse as parseYAML } from "yaml";
 import type { CodeHost } from "./code.ts";
 import { lintCode } from "./code.ts";
 import { hasLanguage } from "./code/index.ts";
@@ -70,13 +70,9 @@ export function isRuleFile(f: File): boolean {
  * Its tokens, swaps and exceptions are patterns, and often wrong on purpose.
  */
 export function lintRule(host: DataHost, f: File): void {
-	let fields: unknown;
-	try {
-		fields = parseYAML(f.content);
-	} catch {
-		// Not a rule Vale could load either; there is nothing to lint.
-		return;
-	}
+	// Read as leniently as Vale reads a rule: a file this cannot parse is one
+	// Vale could not have loaded either, so there is nothing to lint.
+	const fields = tryParseLenient(f.content);
 	if (fields === null || typeof fields !== "object") return;
 
 	const scopes = RULE_PROSE.filter((key) => key in fields).map((key) => ({

@@ -96,10 +96,11 @@ describe("the library's surface", () => {
 
 		const vale = await Vale.fromConfig({ ignoreGlobal: true });
 		const files = vale.lintFile("docs");
+		// With nothing turned on globally, a file no section matches has no
+		// rules at all, so the walk does not read it: `c.txt` never appears.
 		expect(files.map((f) => path.basename(f.path)).sort()).toEqual([
 			"a.md",
 			"b.md",
-			"c.txt",
 		]);
 		expect(files.flatMap((f) => f.sortedAlerts())).toHaveLength(2);
 	});
@@ -143,11 +144,15 @@ describe("one case per rule type", () => {
 	});
 
 	test("repetition", async () => {
+		// `ignorecase` matters: without it the comparison is case-sensitive, so
+		// "This this" is two different words. Vale's own Repetition rule sets it.
 		project(
-			"extends: repetition\nmessage: \"'%s' is repeated.\"\nlevel: warning\nalpha: true\ntokens:\n  - '[^\\s]+'\n",
+			"extends: repetition\nmessage: \"'%s' is repeated.\"\nlevel: warning\nalpha: true\nignorecase: true\ntokens:\n  - '[^\\s]+'\n",
 		);
 		write("doc.md", "This this is repeated.\n");
-		expect(await lint("doc.md")).toEqual(["1:6:T.Rule:'this' is repeated."]);
+		// The alert is placed at the first of the two, which is where the
+		// repetition starts.
+		expect(await lint("doc.md")).toEqual(["1:1:T.Rule:'this' is repeated."]);
 	});
 
 	test("consistency", async () => {
@@ -176,7 +181,9 @@ describe("one case per rule type", () => {
 
 	test("readability", async () => {
 		project(
-			"extends: readability\nmessage: \"Grade level is %s.\"\nlevel: warning\nmetrics:\n  - flesch-kincaid\ngrade: 1\n",
+			// The metric name is matched exactly, and the canonical spelling is
+			// capitalized; a misspelled one scores zero and reports nothing.
+			"extends: readability\nmessage: \"Grade level is %s.\"\nlevel: warning\nmetrics:\n  - Flesch-Kincaid\ngrade: 1\n",
 		);
 		write(
 			"doc.md",
@@ -212,8 +219,10 @@ describe("one case per rule type", () => {
 			].join("\n"),
 		);
 		write("doc.md", "An interdepartmental reorganization.\n");
+		// Both words are twelve characters or more, so both are reported.
 		expect(await lint("doc.md")).toEqual([
 			"1:4:T.Rule:'interdepartmental' is a long word.",
+			"1:22:T.Rule:'reorganization' is a long word.",
 		]);
 	});
 

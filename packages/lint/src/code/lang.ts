@@ -22,9 +22,10 @@
  *
  * `web-tree-sitter` is pinned to 0.25.x rather than the current 0.27:
  * `tree-sitter-wasms` 0.1.13 was built with an older Emscripten, and 0.26 and
- * later refuse to load its modules. Within 0.25 every grammar Vale needs
- * loads, except Elm -- so Haskell joins the languages read by the scanner
- * below.
+ * later refuse to load its modules. Within 0.25, two of the grammars Vale
+ * would use are still unusable -- Elm, which Go parses Haskell with, and YAML,
+ * whose module breaks the runtime's parse entry point for every file after it.
+ * Both languages are read by the scanner instead.
  */
 
 import type { Scope } from "@vale-ts/core";
@@ -74,7 +75,6 @@ const GRAMMARS: Readonly<Record<string, string>> = {
 	".toml": "toml",
 	".ts": "typescript",
 	".tsx": "tsx",
-	".yml": "yaml",
 };
 
 /** Each loaded grammar, by its file's name. */
@@ -122,9 +122,12 @@ export function codeReady(): boolean {
  *
  * `@vale-ts/core` carries the two Go has -- Clojure, because no bundled
  * grammar uses `;` comments, and PowerShell, because a stand-in would lose the
- * interiors of its `<# #>` blocks -- and these are the rest: Haskell, whose
- * Elm grammar this build cannot load, and Julia and Protocol Buffers, which
+ * interiors of its `<# #>` blocks -- and these are the rest: Haskell and YAML,
+ * whose grammars this build cannot load, and Julia and Protocol Buffers, which
  * `tree-sitter-wasms` does not ship at all.
+ *
+ * YAML is the one that needs more than a delimiter: a `#` inside a quoted
+ * scalar, or inside the body of a block scalar, is content. See `scanner.ts`.
  *
  * A scanned comment has the same shape a captured one does, so everything
  * downstream -- dedenting, markup, alert placement -- is identical.
@@ -134,6 +137,12 @@ export function codeReady(): boolean {
  * opener on the same line, which a whole-line opener would have swallowed.
  */
 export const SCANNED: Readonly<Record<string, ScannerDelims>> = {
+	".yml": {
+		inline: /#.*/,
+		blockStart: /$^/,
+		blockEnd: /$^/,
+		style: "yaml",
+	},
 	".clj": {
 		inline: /;+.*/,
 		blockStart: /$^/,
@@ -426,8 +435,9 @@ function define(ext: string): Language | null {
 		case ".yaml":
 			return language({
 				delims: /#/,
-				queries: COMMENT,
+				queries: [],
 				padding: (s) => computePadding(s, ["#"]),
+				scanner: SCANNED[".yml"],
 			});
 		case ".toml":
 			// A `#` inside a string is not a comment, which is what the grammar

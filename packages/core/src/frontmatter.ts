@@ -7,13 +7,7 @@
  */
 
 import { parse as parseTOML } from "smol-toml";
-import {
-	type Document,
-	isMap,
-	isScalar,
-	parseDocument,
-	type Scalar,
-} from "yaml";
+import { type Document, isMap, isScalar, parseDocument, type Scalar } from "yaml";
 import { blockScalarContentStart } from "./structured.ts";
 
 /** The delimiters a front-matter block may be wrapped in. */

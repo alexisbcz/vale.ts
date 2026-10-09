@@ -21,6 +21,7 @@ import type { Comment, Language } from "./types.ts";
 export function scanComments(source: string, lang: Language): Comment[] {
 	const delims = lang.scanner;
 	if (delims === null) return [];
+	if (delims.style === "yaml") return scanYAML(source, lang);
 
 	const builder = new CommentBuilder(lang);
 	const found: Comment[] = [];
@@ -94,4 +95,106 @@ export function scanComments(source: string, lang: Language): Comment[] {
 function matchOf(re: RegExp, line: string): RegExpExecArray | null {
 	const m = re.exec(line);
 	return m === null || m[0].length === 0 ? null : m;
+}
+
+/**
+ * The comments of a YAML file.
+ *
+ * A `#` is a comment only where YAML says it is: at the start of a line, or
+ * after whitespace, and not inside a quoted scalar or the body of a block
+ * scalar. A pattern cannot know that, which is exactly what the grammar was
+ * for -- so the rule is written out here instead.
+ *
+ * Both quotings are tracked, with their own escapes: `\` in a double-quoted
+ * scalar and a doubled `''` in a single-quoted one. A block scalar's body is
+ * every following line indented past its opener, blank lines included.
+ */
+function scanYAML(source: string, lang: Language): Comment[] {
+	const builder = new CommentBuilder(lang);
+	const found: Comment[] = [];
+	const lines = source.split("\n");
+
+	// The indentation a line must have to be inside the open block scalar, or
+	// -1 when there is none.
+	let blockIndent = -1;
+
+	for (let i = 0; i < lines.length; i++) {
+		const line = lines[i];
+
+		if (blockIndent >= 0) {
+			// A blank line stays inside the block; a line indented less than the
+			// body ends it, and is then read as an ordinary line.
+			if (line.trim() === "") continue;
+			if (indentOf(line) >= blockIndent) continue;
+			blockIndent = -1;
+		}
+
+		const marker = yamlCommentAt(line);
+		if (marker >= 0) {
+			found.push(
+				builder.build(
+					line.slice(marker),
+					i,
+					marker,
+					"",
+					lang.queries[0]?.type ?? "",
+					"",
+				),
+			);
+		}
+
+		// A block scalar opens on a line whose value is `|` or `>`, with the
+		// chomping and indentation indicators YAML allows after it.
+		const value = marker < 0 ? line : line.slice(0, marker);
+		if (RE_BLOCK_SCALAR.test(value)) blockIndent = indentOf(line) + 1;
+	}
+
+	return found;
+}
+
+/** A block scalar's header, at the end of the line that opens it. */
+const RE_BLOCK_SCALAR = /(?:^|[\s])[|>][0-9]*[-+]?[ \t]*$/;
+
+/** How many columns of indentation a line begins with. */
+function indentOf(line: string): number {
+	let n = 0;
+	while (n < line.length && (line[n] === " " || line[n] === "\t")) n++;
+	return n;
+}
+
+/**
+ * The index of the `#` that opens a comment on a YAML line, or -1.
+ *
+ * The marker has to start the line or follow whitespace -- `a#b` is a scalar
+ * holding a hash -- and it has to be outside both quotings.
+ */
+function yamlCommentAt(line: string): number {
+	let quote = "";
+
+	for (let i = 0; i < line.length; i++) {
+		const c = line[i];
+
+		if (quote === '"') {
+			if (c === "\\") i++;
+			else if (c === '"') quote = "";
+			continue;
+		}
+		if (quote === "'") {
+			// A doubled quote is an escaped one, not the end of the scalar.
+			if (c === "'") {
+				if (line[i + 1] === "'") i++;
+				else quote = "";
+			}
+			continue;
+		}
+
+		if (c === '"' || c === "'") {
+			quote = c;
+			continue;
+		}
+		if (c !== "#") continue;
+		if (i === 0 || line[i - 1] === " " || line[i - 1] === "\t") return i;
+	}
+
+	return -1;
 }

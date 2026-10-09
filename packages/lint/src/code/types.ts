@@ -49,6 +49,15 @@ export interface ScannerDelims {
 	blockStart: RegExp;
 	/** The line that closes one. */
 	blockEnd: RegExp;
+	/**
+	 * How the line is read.
+	 *
+	 * `delimited` finds a delimiter wherever it appears, which is all a
+	 * language whose comments cannot be hidden needs. `yaml` knows where a
+	 * `#` is content instead: inside a quoted scalar, and inside the body of
+	 * a block scalar. See `scanner.ts`.
+	 */
+	style?: "delimited" | "yaml";
 }
 
 /** A programming language Vale can read the comments of. */

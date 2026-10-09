@@ -360,19 +360,13 @@ describe("BasedOnStyles = NONE", () => {
 		},
 		{
 			desc: "a later layer's NONE clears an earlier one's styles",
-			layers: [
-				"[*.md]\nBasedOnStyles = Vale\n",
-				"[*.md]\nBasedOnStyles = NONE\n",
-			],
+			layers: ["[*.md]\nBasedOnStyles = Vale\n", "[*.md]\nBasedOnStyles = NONE\n"],
 			global: [],
 			local: [],
 		},
 		{
 			desc: "a later layer's styles follow an earlier NONE",
-			layers: [
-				"[*.md]\nBasedOnStyles = NONE\n",
-				"[*.md]\nBasedOnStyles = House\n",
-			],
+			layers: ["[*.md]\nBasedOnStyles = NONE\n", "[*.md]\nBasedOnStyles = House\n"],
 			global: [],
 			local: ["House"],
 		},

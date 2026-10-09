@@ -42,7 +42,12 @@ describe("Condition", () => {
 		content: string;
 		want: boolean;
 	}> = [
-		{ expr: ".Meta.published == false", path: "post.md", content: yaml, want: true },
+		{
+			expr: ".Meta.published == false",
+			path: "post.md",
+			content: yaml,
+			want: true,
+		},
 		{
 			expr: ".Meta.published == false",
 			path: "post.md",
@@ -92,9 +97,9 @@ describe("Condition", () => {
 
 	test.each(cases)("$expr on $path", ({ expr, path, content, want }) => {
 		const cond = new Condition(expr);
-		expect(
-			cond.holds(newFileFields(path, content, cond.readsMeta, rootINI)),
-		).toBe(want);
+		expect(cond.holds(newFileFields(path, content, cond.readsMeta, rootINI))).toBe(
+			want,
+		);
 	});
 });
 

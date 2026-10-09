@@ -112,11 +112,11 @@ describe("predicates over a list", () => {
 		['any(Rules, {.Level == "error"})', true],
 		['any(Rules, {.Level == "fatal"})', false],
 		['all(Rules, {.Name startsWith "V"})', false],
-		["all(Rules, {.Name matches \"^[A-Z]\"})", true],
+		['all(Rules, {.Name matches "^[A-Z]"})', true],
 		['none(Rules, {.Level == "fatal"})', true],
 		['none(Rules, {.Level == "error"})', false],
 		['one(Rules, {.Level == "error"})', true],
-		["one(Rules, {.Name != \"\"})", false],
+		['one(Rules, {.Name != ""})', false],
 		// `filter` and `map` give back lists, so they compose with the rest.
 		['len(filter(Rules, {.Level == "error"}))', 1],
 		['join(map(Rules, {.Name}), ",")', "Vale.Spelling,Google.Colons"],
