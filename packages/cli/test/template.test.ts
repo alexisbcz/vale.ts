@@ -70,8 +70,7 @@ describe("actions and literals", () => {
 
 describe("control flow", () => {
 	test("if, else if, else close on one end", async () => {
-		const src =
-			'{{if eq . "a"}}A{{else if eq . "b"}}B{{else}}C{{end}}';
+		const src = '{{if eq . "a"}}A{{else if eq . "b"}}B{{else}}C{{end}}';
 		expect(await renderOrdered(src, "a")).toBe("A");
 		expect(await renderOrdered(src, "b")).toBe("B");
 		expect(await renderOrdered(src, "z")).toBe("C");
@@ -88,10 +87,7 @@ describe("control flow", () => {
 
 	test("range over a list, with an index variable", async () => {
 		expect(
-			await renderOrdered("{{range $i, $v := .}}{{$i}}={{$v}};{{end}}", [
-				"a",
-				"b",
-			]),
+			await renderOrdered("{{range $i, $v := .}}{{$i}}={{$v}};{{end}}", ["a", "b"]),
 		).toBe("0=a;1=b;");
 	});
 
@@ -105,9 +101,7 @@ describe("control flow", () => {
 	});
 
 	test("range has an else for an empty list", async () => {
-		expect(await renderOrdered("{{range .}}x{{else}}none{{end}}", [])).toBe(
-			"none",
-		);
+		expect(await renderOrdered("{{range .}}x{{else}}none{{end}}", [])).toBe("none");
 	});
 
 	test("with rebinds the dot", async () => {
@@ -140,10 +134,10 @@ describe("variables", () => {
 describe("pipelines", () => {
 	test("the value flows into the last argument", async () => {
 		expect(await renderOrdered('{{"x" | printf "<%s>"}}', null)).toBe("<x>");
-		expect(await renderOrdered("{{. | int | plural \"file\" \"files\"}}", 1)).toBe(
+		expect(await renderOrdered('{{. | int | plural "file" "files"}}', 1)).toBe(
 			"file",
 		);
-		expect(await renderOrdered("{{. | int | plural \"file\" \"files\"}}", 2)).toBe(
+		expect(await renderOrdered('{{. | int | plural "file" "files"}}', 2)).toBe(
 			"files",
 		);
 	});
@@ -323,8 +317,8 @@ describe("Vale's own templates", () => {
 		expect(out).toContain(
 			" 5:2  error       Use 'use'.           T.Swap            https://vale.sh \n",
 		);
-		expect(out.trimEnd().endsWith("1 errors, 0 warnings and 1 suggestions in 1 file.")).toBe(
-			true,
-		);
+		expect(
+			out.trimEnd().endsWith("1 errors, 0 warnings and 1 suggestions in 1 file."),
+		).toBe(true);
 	});
 });

@@ -32,6 +32,7 @@ import {
 } from "yaml";
 import { strLen } from "./util.ts";
 import type { Part, ViewTarget } from "./view.ts";
+import { fatalYAMLErrors, LENIENT } from "./yaml.ts";
 
 /**
  * One scalar value's source position, and the quote it was written with.
@@ -102,8 +103,8 @@ export function fileToValue(f: ViewTarget): {
 	switch (f.realExt) {
 		case ".json": {
 			value = JSON.parse(f.content);
-			const doc = parseDocument(f.content);
-			if (doc.errors.length === 0) {
+			const doc = parseDocument(f.content, LENIENT);
+			if (fatalYAMLErrors(doc).length === 0) {
 				scalars = walkYAMLScalars(doc, newSource(f.content));
 			}
 			break;
@@ -121,8 +122,9 @@ export function fileToValue(f: ViewTarget): {
 			// folds happened. The parser itself locates the indicators, so the
 			// rewrite is precise.
 			const rewritten = foldedToLiteral(f.content);
-			const doc = parseDocument(rewritten);
-			if (doc.errors.length > 0) throw yamlError(doc);
+			const doc = parseDocument(rewritten, LENIENT);
+			const bad = fatalYAMLErrors(doc);
+			if (bad.length > 0) throw yamlError(bad);
 			value = doc.toJS();
 			scalars = walkYAMLScalars(doc, newSource(rewritten));
 		}
@@ -249,8 +251,9 @@ export function blockScalarContentStart(
  * the indicators.
  */
 export function foldedToLiteral(src: string): string {
-	const doc = parseDocument(src);
-	if (doc.errors.length > 0) throw yamlError(doc);
+	const doc = parseDocument(src, LENIENT);
+	const bad = fatalYAMLErrors(doc);
+	if (bad.length > 0) throw yamlError(bad);
 
 	const hits: number[] = [];
 	visit(doc, {
@@ -318,7 +321,7 @@ export function newPart(
 }
 
 /** The first parse error, as the one error a caller sees. */
-function yamlError(doc: Document): Error {
-	const first = doc.errors[0];
+function yamlError(errors: ReadonlyArray<{ message: string }>): Error {
+	const first = errors[0];
 	return new Error(first === undefined ? "invalid YAML" : first.message);
 }

@@ -22,6 +22,7 @@ import { sortAlerts } from "./alert.ts";
 import type { Block, NLPInfo, Run } from "./block.ts";
 import { newNLPInfo } from "./block.ts";
 import type { Config } from "./config.ts";
+import { warnDroppedStyles } from "./config.ts";
 import { newE201FromPosition } from "./errors.ts";
 import { formatFromExt, normalizePathFormat } from "./format.ts";
 import {
@@ -367,7 +368,8 @@ export class File {
 		);
 		const at: [number, number] = [line, span[0]!];
 
-		const regions = (this.regions[key] ??= []);
+		this.regions[key] ??= [];
+		const regions = this.regions[key];
 		if (disabled) {
 			if (regions.length > 0 && regions[regions.length - 1]!.open) return;
 			regions.push({ begin: at, end: [0, 0], open: true });
@@ -795,6 +797,9 @@ export function newFile(src: string, config: Config): File {
 	}
 
 	let baseStyles = config.gBaseStyles;
+	// Which section set `baseStyles`, so that a section replacing a package's
+	// list can say which package it came from. "" is the top level.
+	let styledBy = "";
 	let checks: Record<string, boolean> = {};
 	let levels: Record<string, string> = {};
 	let unset: Record<string, boolean> = {};
@@ -810,7 +815,9 @@ export function newFile(src: string, config: Config): File {
 
 		const styles = config.sBaseStyles[sec];
 		if (styles !== undefined) {
+			warnDroppedStyles(config, sec, styledBy, baseStyles, styles);
 			baseStyles = styles;
+			styledBy = sec;
 			if (styles.length === 0) {
 				// `BasedOnStyles =` says nothing runs here: earlier sections no
 				// longer apply, and global settings are off.

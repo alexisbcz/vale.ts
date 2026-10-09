@@ -6,19 +6,16 @@
  * listed so that `uncovered` can say which never produced an alert.
  */
 
-import { isTestFile, tryParseLenient, walk } from "@vale-ts/core";
 import { readFileSync, statSync } from "node:fs";
 import * as path from "node:path";
+import { isTestFile, tryParseLenient, walk } from "@vale-ts/core";
 import type { Result } from "./run.ts";
 import { isolatedName } from "./run.ts";
 
 /** Whether the file is a rule: YAML with an `extends`, and not a test file. */
 export function isRule(file: string): boolean {
 	const name = path.basename(file);
-	if (
-		isTestFile(name) ||
-		(!name.endsWith(".yml") && !name.endsWith(".yaml"))
-	) {
+	if (isTestFile(name) || (!name.endsWith(".yml") && !name.endsWith(".yaml"))) {
 		return false;
 	}
 

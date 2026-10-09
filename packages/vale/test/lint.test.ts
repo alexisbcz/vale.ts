@@ -58,7 +58,10 @@ async function lint(file: string): Promise<string[]> {
 
 describe("the library's surface", () => {
 	test("a configuration can come from a string", async () => {
-		write("styles/T/Rule.yml", "extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		write(
+			"styles/T/Rule.yml",
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "We utilize it.\n");
 
 		const vale = await Vale.fromString(
@@ -72,24 +75,28 @@ describe("the library's surface", () => {
 	test("a string is linted as the path it claims to be", async () => {
 		// Which rules apply depends on the path, so an editor buffer has to be
 		// able to say what it is.
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 
 		const vale = await Vale.fromConfig({ ignoreGlobal: true });
 		expect(
-			vale.lintString("We utilize it.", { path: "buffer.md" }).flatMap((f) =>
-				f.sortedAlerts(),
-			),
+			vale
+				.lintString("We utilize it.", { path: "buffer.md" })
+				.flatMap((f) => f.sortedAlerts()),
 		).toHaveLength(1);
 		// The same text as a `.txt` file matches no section, so no rule runs.
 		expect(
-			vale.lintString("We utilize it.", { path: "buffer.txt" }).flatMap((f) =>
-				f.sortedAlerts(),
-			),
+			vale
+				.lintString("We utilize it.", { path: "buffer.txt" })
+				.flatMap((f) => f.sortedAlerts()),
 		).toHaveLength(0);
 	});
 
 	test("a directory is walked", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("docs/a.md", "We utilize it.\n");
 		write("docs/b.md", "We utilize it too.\n");
 		write("docs/c.txt", "We utilize it as well.\n");
@@ -106,7 +113,9 @@ describe("the library's surface", () => {
 	});
 
 	test("a glob narrows the walk", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("docs/a.md", "We utilize it.\n");
 		write("docs/b.md", "We utilize it too.\n");
 
@@ -183,7 +192,7 @@ describe("one case per rule type", () => {
 		project(
 			// The metric name is matched exactly, and the canonical spelling is
 			// capitalized; a misspelled one scores zero and reports nothing.
-			"extends: readability\nmessage: \"Grade level is %s.\"\nlevel: warning\nmetrics:\n  - Flesch-Kincaid\ngrade: 1\n",
+			'extends: readability\nmessage: "Grade level is %s."\nlevel: warning\nmetrics:\n  - Flesch-Kincaid\ngrade: 1\n',
 		);
 		write(
 			"doc.md",
@@ -196,7 +205,7 @@ describe("one case per rule type", () => {
 
 	test("metric", async () => {
 		project(
-			"extends: metric\nmessage: \"There are %s words.\"\nlevel: warning\nformula: |\n  words\ncondition: \"> 2\"\n",
+			'extends: metric\nmessage: "There are %s words."\nlevel: warning\nformula: |\n  words\ncondition: "> 2"\n',
 		);
 		write("doc.md", "One two three four.\n");
 		expect((await lint("doc.md")).length).toBeGreaterThan(0);
@@ -206,7 +215,7 @@ describe("one case per rule type", () => {
 		project(
 			[
 				"extends: script",
-				'message: "\'%s\' is a long word."',
+				"message: \"'%s' is a long word.\"",
 				"level: warning",
 				"scope: paragraph",
 				"script: |",
@@ -350,8 +359,12 @@ describe("what the configuration decides", () => {
 		write("out.md", "We utilize it.\n");
 
 		const vale = await Vale.fromConfig({ ignoreGlobal: true });
-		expect(vale.lintFile("docs/in.md").flatMap((f) => f.sortedAlerts())).toHaveLength(1);
-		expect(vale.lintFile("out.md").flatMap((f) => f.sortedAlerts())).toHaveLength(0);
+		expect(
+			vale.lintFile("docs/in.md").flatMap((f) => f.sortedAlerts()),
+		).toHaveLength(1);
+		expect(vale.lintFile("out.md").flatMap((f) => f.sortedAlerts())).toHaveLength(
+			0,
+		);
 	});
 
 	test("a conditional section applies only where its `if` holds", async () => {
@@ -374,8 +387,12 @@ describe("what the configuration decides", () => {
 		write("final.md", "---\ndraft: false\n---\n\nWe utilize it.\n");
 
 		const vale = await Vale.fromConfig({ ignoreGlobal: true });
-		expect(vale.lintFile("draft.md").flatMap((f) => f.sortedAlerts())).toHaveLength(1);
-		expect(vale.lintFile("final.md").flatMap((f) => f.sortedAlerts())).toHaveLength(0);
+		expect(vale.lintFile("draft.md").flatMap((f) => f.sortedAlerts())).toHaveLength(
+			1,
+		);
+		expect(vale.lintFile("final.md").flatMap((f) => f.sortedAlerts())).toHaveLength(
+			0,
+		);
 	});
 
 	test("a vocabulary accepts a word the speller would reject", async () => {
@@ -423,7 +440,9 @@ describe("what the configuration decides", () => {
 
 describe("where an alert lands", () => {
 	test("a match in a heading is reported in the heading", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "# We utilize it\n\nAnd again we utilize it.\n");
 		expect(await lint("doc.md")).toEqual([
 			"1:6:T.Rule:found 'utilize'",
@@ -432,7 +451,9 @@ describe("where an alert lands", () => {
 	});
 
 	test("every occurrence gets its own alert, in order", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "We utilize and utilize and utilize.\n");
 		expect(await lint("doc.md")).toEqual([
 			"1:4:T.Rule:found 'utilize'",
@@ -442,19 +463,25 @@ describe("where an alert lands", () => {
 	});
 
 	test("a match inside a code span is not reported", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "Call `utilize()` and then utilize it.\n");
 		expect(await lint("doc.md")).toEqual(["1:27:T.Rule:found 'utilize'"]);
 	});
 
 	test("a match inside a fenced block is not reported", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "```\nutilize\n```\n\nAnd utilize here.\n");
 		expect(await lint("doc.md")).toEqual(["5:5:T.Rule:found 'utilize'"]);
 	});
 
 	test("a match in front matter is reported at its value", async () => {
-		project("extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n");
+		project(
+			"extends: existence\nmessage: \"found '%s'\"\nlevel: error\ntokens:\n  - utilize\n",
+		);
 		write("doc.md", "---\ntitle: We utilize it\n---\n\nBody.\n");
 		expect(await lint("doc.md")).toEqual(["2:11:T.Rule:found 'utilize'"]);
 	});

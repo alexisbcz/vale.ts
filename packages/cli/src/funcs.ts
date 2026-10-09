@@ -12,6 +12,7 @@
  */
 
 import { println, stdout } from "./out.ts";
+import { sprintf, stringify, type TemplateFunc, truthy } from "./template.ts";
 import {
 	blue as blueStyle,
 	red as redStyle,
@@ -19,7 +20,6 @@ import {
 	underline as underlineStyle,
 	yellow as yellowStyle,
 } from "./term.ts";
-import { sprintf, stringify, type TemplateFunc, truthy } from "./template.ts";
 import { getJSON } from "./util.ts";
 
 /** A table a template is filling in, row by row. */
@@ -134,12 +134,9 @@ export const FUNCS: Record<string, TemplateFunc> = {
 	trimSuffix: (suffix, s) => {
 		const value = text(s);
 		const cut = text(suffix);
-		return cut !== "" && value.endsWith(cut)
-			? value.slice(0, -cut.length)
-			: value;
+		return cut !== "" && value.endsWith(cut) ? value.slice(0, -cut.length) : value;
 	},
-	replace: (old, next, s) =>
-		text(s).split(text(old)).join(text(next)),
+	replace: (old, next, s) => text(s).split(text(old)).join(text(next)),
 	repeat: (n, s) => text(s).repeat(Math.max(0, Math.trunc(num(n)))),
 	contains: (needle, s) => text(s).includes(text(needle)),
 	hasPrefix: (prefix, s) => text(s).startsWith(text(prefix)),
@@ -193,7 +190,7 @@ export const FUNCS: Record<string, TemplateFunc> = {
 	split: (sep, s) => {
 		const parts = text(s).split(text(sep));
 		const out = new Map<string, unknown>();
-		parts.forEach((p, i) => out.set(`_${i}`, p));
+		for (const [i, p] of parts.entries()) out.set(`_${i}`, p);
 		return out;
 	},
 	splitList: (sep, s) => text(s).split(text(sep)),

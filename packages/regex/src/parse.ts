@@ -303,7 +303,11 @@ class Parser {
 			case "*":
 			case "+":
 			case "?":
-				throw new PatternError("missing argument to repetition operator", this.src, this.pos);
+				throw new PatternError(
+					"missing argument to repetition operator",
+					this.src,
+					this.pos,
+				);
 			default:
 				return this.parseLiteralRun();
 		}
@@ -361,7 +365,7 @@ class Parser {
 		return { kind: "lit", value: out };
 	}
 
-	private parseGroup(nested: boolean): Node | null {
+	private parseGroup(_nested: boolean): Node | null {
 		const open = this.pos;
 		this.pos++; // `(`
 
@@ -461,7 +465,11 @@ class Parser {
 		let name = "";
 		while (!this.eof() && this.peek() !== closer) name += this.src[this.pos++];
 		if (this.eof()) {
-			throw new PatternError("invalid group name: group names must begin with a word character and have a matching terminator", this.src, open);
+			throw new PatternError(
+				"invalid group name: group names must begin with a word character and have a matching terminator",
+				this.src,
+				open,
+			);
 		}
 		this.pos++; // closer
 
@@ -511,7 +519,11 @@ class Parser {
 		}
 
 		if (!saw) {
-			throw new PatternError(`unrecognized grouping construct: (?${this.src.slice(this.pos, this.pos + 1)}`, this.src, open);
+			throw new PatternError(
+				`unrecognized grouping construct: (?${this.src.slice(this.pos, this.pos + 1)}`,
+				this.src,
+				open,
+			);
 		}
 
 		if (this.peek() === ":") {
@@ -548,7 +560,11 @@ class Parser {
 		const start = this.pos;
 		this.pos++; // `\`
 		if (this.eof()) {
-			throw new PatternError(String.raw`illegal \ at end of pattern`, this.src, start);
+			throw new PatternError(
+				String.raw`illegal \ at end of pattern`,
+				this.src,
+				start,
+			);
 		}
 		const c = this.src[this.pos++]!;
 
@@ -615,7 +631,11 @@ class Parser {
 			let name = "";
 			while (!this.eof() && this.peek() !== "}") name += this.src[this.pos++];
 			if (this.eof()) {
-				throw new PatternError(String.raw`incomplete \p{X} character escape`, this.src, start);
+				throw new PatternError(
+					String.raw`incomplete \p{X} character escape`,
+					this.src,
+					start,
+				);
 			}
 			this.pos++;
 			let neg = negated;
@@ -632,7 +652,11 @@ class Parser {
 		// RE2/PCRE's one-letter form: `\pL`.
 		const letter = this.src[this.pos++] ?? "";
 		if (letter === "") {
-			throw new PatternError(String.raw`malformed \p{X} character escape`, this.src, start);
+			throw new PatternError(
+				String.raw`malformed \p{X} character escape`,
+				this.src,
+				start,
+			);
 		}
 		return {
 			kind: "class",

@@ -231,9 +231,18 @@ describe("the other steps", () => {
 });
 
 describe("errors name both dialects", () => {
-	test("a malformed selector", () => {
-		expect(() => selectValues({ a: 1 }, "this.is.not.valid.[[[")).toThrow(
+	test("a malformed selector, once reading reaches it", () => {
+		const doc = { this: { is: { not: { valid: {} } } } };
+		expect(() => selectValues(doc, "this.is.not.valid.[[[")).toThrow(
 			/unbalanced brackets.*as a v2 selector: unbalanced brackets/s,
+		);
+	});
+
+	test("a selector is read one step at a time", () => {
+		// The brackets are never reached: `this` is already a property read on
+		// a list, which is the mistake dasel reports.
+		expect(() => selectValues([{ role: "user" }], "this.is.not.valid.[[[")).toThrow(
+			/expected map, got array/,
 		);
 	});
 
@@ -241,7 +250,9 @@ describe("errors name both dialects", () => {
 		const chat = { messages: [{ role: "user" }] };
 		expect(() =>
 			selectValues(chat, 'messages.filter(role == "assistant").content'),
-		).toThrow(/not a predicate.*as a v2 selector: unexpected function call/s);
+		).toThrow(
+			'unexpected type: expected map, got array (as a v2 selector: cannot use property selector on non map/struct types: slice: property not found: role == "assistant")',
+		);
 	});
 
 	test("a property on a list", () => {

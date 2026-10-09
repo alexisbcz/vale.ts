@@ -29,8 +29,10 @@ export function diff(want: string, got: string): Line[] {
 	let j = 0;
 
 	for (const c of common) {
-		while (i < w.length && w[i] !== c) out.push({ op: Del, text: w[i++] as string });
-		while (j < g.length && g[j] !== c) out.push({ op: Add, text: g[j++] as string });
+		while (i < w.length && w[i] !== c)
+			out.push({ op: Del, text: w[i++] as string });
+		while (j < g.length && g[j] !== c)
+			out.push({ op: Add, text: g[j++] as string });
 		out.push({ op: Same, text: c });
 		i++;
 		j++;

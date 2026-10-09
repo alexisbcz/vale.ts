@@ -45,10 +45,12 @@ function project(dir: string): void {
 	);
 	writeFileSync(
 		path.join(dir, "styles", "T", "Live.yml"),
-		'extends: existence\nmessage: "\'%s\' left in text"\nlevel: error\ntokens:\n  - TODO\n',
+		"extends: existence\nmessage: \"'%s' left in text\"\nlevel: error\ntokens:\n  - TODO\n",
 	);
-	writeFileSync(path.join(dir, "styles", "T", "Dead.yml"),
-		'extends: existence\nmessage: "never"\nlevel: error\ntokens:\n  - zzzz-nothing\n');
+	writeFileSync(
+		path.join(dir, "styles", "T", "Dead.yml"),
+		'extends: existence\nmessage: "never"\nlevel: error\ntokens:\n  - zzzz-nothing\n',
+	);
 	writeFileSync(path.join(dir, "doc.md"), "A TODO left here.\n");
 	writeFileSync(path.join(dir, "clean.md"), "Nothing here.\n");
 }
@@ -83,9 +85,11 @@ describe("the screens", () => {
 	test("help <command> is that command's help", async () => {
 		const r = await invoke(["help", "sync"]);
 		expect(r.code).toBe(0);
-		expect(r.out.startsWith(
-			"vale sync - Download and install external configuration sources.\n",
-		)).toBe(true);
+		expect(
+			r.out.startsWith(
+				"vale sync - Download and install external configuration sources.\n",
+			),
+		).toBe(true);
 		expect(r.out).toContain("Usage:\tvale sync\n");
 		expect(r.out).toContain("See https://vale.sh for more.\n");
 	});
@@ -113,7 +117,7 @@ describe("exit codes", () => {
 	});
 
 	test("a mistyped command exits 2 rather than linting the word", async () => {
-		await inTempDir(async (dir) => {
+		await inTempDir(async (_dir) => {
 			const r = await invoke(["snyc"]);
 			expect(r.code).toBe(2);
 			expect(r.err).toContain("unknown command snyc");
@@ -185,7 +189,12 @@ describe("exit codes", () => {
 		await inTempDir(async (dir) => {
 			project(dir);
 
-			const r = await invoke(["--no-global", "--output=line", "--ext=.md", "A TODO here."]);
+			const r = await invoke([
+				"--no-global",
+				"--output=line",
+				"--ext=.md",
+				"A TODO here.",
+			]);
 			expect(r.code).toBe(1);
 			expect(r.out).toContain("T.Live:'TODO' left in text");
 		});
@@ -286,7 +295,12 @@ describe("the commands", () => {
 			mkdirSync(path.join(dir, "empty", "node_modules"), { recursive: true });
 			writeFileSync(path.join(dir, "empty/node_modules/test.md"), "# Title\n");
 
-			const r = await invoke(["--no-global", "--output=line", "ls-metrics", "empty"]);
+			const r = await invoke([
+				"--no-global",
+				"--output=line",
+				"ls-metrics",
+				"empty",
+			]);
 			expect(r.code).toBe(2);
 			expect(r.err.trim()).toBe(
 				"[ls-metrics]:E100:'empty' contains no lintable files",

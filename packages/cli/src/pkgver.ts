@@ -18,7 +18,12 @@ import { readFileSync } from "node:fs";
 import * as path from "node:path";
 import type { Meta, Release } from "./api.ts";
 import { fetchArchive, tempDir } from "./api.ts";
-import { compareVersions, parseConstraint, parseVersion, satisfies } from "./semver.ts";
+import {
+	compareVersions,
+	parseConstraint,
+	parseVersion,
+	satisfies,
+} from "./semver.ts";
 import { pkgRoot } from "./sync.ts";
 import { printInfo, printWarning } from "./term.ts";
 import { version } from "./version.ts";
@@ -91,9 +96,7 @@ export function sortedReleases(releases: readonly Release[]): Release[] {
 export async function releaseTags(feed: string): Promise<string[]> {
 	const resp = await fetch(feed);
 	if (!resp.ok) {
-		throw new Error(
-			`could not fetch '${feed}' (status code '${resp.status}')`,
-		);
+		throw new Error(`could not fetch '${feed}' (status code '${resp.status}')`);
 	}
 
 	// A feed is a few kilobytes; one that is not stops here.

@@ -132,8 +132,7 @@ export const errorMessage = (msg: string): string =>
 	prefixed(" ERROR ", "30;101", msg);
 export const warningMessage = (msg: string): string =>
 	prefixed("WARNING", "30;103", msg);
-export const infoMessage = (msg: string): string =>
-	prefixed("INFO", "30;106", msg);
+export const infoMessage = (msg: string): string => prefixed("INFO", "30;106", msg);
 
 export function printSuccess(msg: string): void {
 	println(successMessage(msg));
@@ -177,9 +176,7 @@ export function newProgress(total: number): Progress | null {
 		const share = total === 0 ? 1 : done / total;
 		const filled = Math.round(share * BAR_WIDTH);
 		const bar = "█".repeat(filled) + " ".repeat(BAR_WIDTH - filled);
-		stdout(
-			`\r${title} [${done}/${total}] ${bar} ${Math.round(share * 100)}%`,
-		);
+		stdout(`\r${title} [${done}/${total}] ${bar} ${Math.round(share * 100)}%`);
 	};
 
 	draw();

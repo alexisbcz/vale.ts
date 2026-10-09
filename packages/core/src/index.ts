@@ -66,7 +66,9 @@ export {
 	TMPL_DIR,
 	VIEW_DIR,
 	VOCAB_DIR,
+	warnDroppedStyles,
 } from "./config.ts";
+export { selectStrings, selectValues } from "./dasel.ts";
 export type { ErrorCondition, ExcerptLine, WarnSink } from "./errors.ts";
 export {
 	newE100,
@@ -99,24 +101,6 @@ export {
 	positionOf,
 } from "./frontmatter.ts";
 export { compileGlob, Glob } from "./glob.ts";
-export { selectStrings, selectValues } from "./dasel.ts";
-export type { Cell } from "./notebook.ts";
-export { describeCell, KERNEL_EXTS, parseNotebook } from "./notebook.ts";
-export type { ScalarPos, ScalarResolver, Source } from "./structured.ts";
-export {
-	blockScalarContentStart,
-	fileToValue,
-	foldedToLiteral,
-	newPart,
-	newScalarResolver,
-	newSource,
-	positionAt,
-	scalarAt,
-	walkYAMLScalars,
-} from "./structured.ts";
-export type { Capture, Value as TextFSMValue } from "./textfsm.ts";
-export { joinCaptures, parseTemplate, Template } from "./textfsm.ts";
-
 export type { LoadOptions } from "./ini.ts";
 export { DEFAULT_SECTION, File as INIFile, Key, Section } from "./ini.ts";
 export type { Located } from "./location.ts";
@@ -139,8 +123,22 @@ export {
 } from "./location.ts";
 export type { Metrics } from "./metrics.ts";
 export { blockMetrics, sentenceLengthSD } from "./metrics.ts";
+export type { Cell } from "./notebook.ts";
+export { describeCell, KERNEL_EXTS, parseNotebook } from "./notebook.ts";
 export { literalTerm, quoteMetaLike, termPattern } from "./patterns.ts";
 export { loadScopeFile, RESERVED_SCOPES } from "./scopes.ts";
+export type { ScalarPos, ScalarResolver, Source } from "./structured.ts";
+export {
+	blockScalarContentStart,
+	fileToValue,
+	foldedToLiteral,
+	newPart,
+	newScalarResolver,
+	newSource,
+	positionAt,
+	scalarAt,
+	walkYAMLScalars,
+} from "./structured.ts";
 export type { WalkEntry } from "./system.ts";
 export {
 	absPath,
@@ -161,6 +159,8 @@ export {
 	which,
 	xdg,
 } from "./system.ts";
+export type { Capture, Value as TextFSMValue } from "./textfsm.ts";
+export { joinCaptures, parseTemplate, Template } from "./textfsm.ts";
 export {
 	baseName,
 	capFirst,

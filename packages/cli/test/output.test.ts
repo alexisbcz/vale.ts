@@ -155,10 +155,7 @@ describe("--output=JSON", () => {
 
 	test("paths are sorted, as a Go map's keys are", async () => {
 		const out = await capture(() => {
-			printJSONAlerts([
-				file("z.md", [alert({})]),
-				file("a.md", [alert({})]),
-			]);
+			printJSONAlerts([file("z.md", [alert({})]), file("a.md", [alert({})])]);
 		});
 		expect(out.out.indexOf('"a.md"')).toBeLessThan(out.out.indexOf('"z.md"'));
 	});
@@ -198,9 +195,7 @@ describe("--output=CLI", () => {
 		const out = await capture(() => {
 			printVerboseAlerts([file("a.md", [])]);
 		});
-		expect(out.out).toBe(
-			"✔ 0 errors, 0 warnings and 0 suggestions in 1 file.\n",
-		);
+		expect(out.out).toBe("✔ 0 errors, 0 warnings and 0 suggestions in 1 file.\n");
 	});
 
 	test("one stdin document is named rather than counted", async () => {

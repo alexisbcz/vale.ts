@@ -8,7 +8,7 @@
  * rendered once and taken apart again.
  */
 
-import { ValeError, toSlash } from "@vale-ts/core";
+import { toSlash, ValeError } from "@vale-ts/core";
 import type { Writer } from "./out.ts";
 import { code, italic, onRed, sgrGreenBold } from "./term.ts";
 import { getJSON, messageOf } from "./util.ts";

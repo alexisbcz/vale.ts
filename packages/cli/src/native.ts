@@ -13,7 +13,11 @@
  * `setManifestRegistry` below.
  */
 
+import { rmSync, writeFileSync } from "node:fs";
+import { homedir } from "node:os";
+import * as path from "node:path";
 import {
+	type CLIFlags,
 	fileExists,
 	isWindows,
 	mkdir,
@@ -22,19 +26,14 @@ import {
 	platformAndArch,
 	which,
 	xdg,
-	type CLIFlags,
 } from "@vale-ts/core";
-import { rmSync, writeFileSync } from "node:fs";
-import { homedir } from "node:os";
-import * as path from "node:path";
 import { fetchArchive } from "./api.ts";
 import { printSuccess } from "./term.ts";
 import { fetchJSON, goJSON } from "./util.ts";
 
 const NATIVE_HOST_NAME = "sh.vale.native";
 
-const RELEASE_URL =
-	"https://github.com/vale-cli/vale-native/releases/download";
+const RELEASE_URL = "https://github.com/vale-cli/vale-native/releases/download";
 
 const SUPPORTED_BROWSERS = ["chrome", "firefox", "opera", "chromium", "edge"];
 
@@ -127,7 +126,8 @@ function writeNativeConfig(): string {
 	const cfgFile = nativeConfig();
 
 	const exe = which(["vale"]);
-	if (exe === "") throw new Error('exec: "vale": executable file not found in $PATH');
+	if (exe === "")
+		throw new Error('exec: "vale": executable file not found in $PATH');
 
 	writeFileSync(cfgFile, JSON.stringify({ path: exe }), { mode: 0o600 });
 	return cfgFile;
@@ -217,10 +217,7 @@ export async function installNativeHost(
 		if (browser === "firefox") manifest.allowed_extensions = allowed;
 		else manifest.allowed_origins = allowed;
 
-		const manifestFile = path.join(
-			where.manifestDir,
-			`${NATIVE_HOST_NAME}.json`,
-		);
+		const manifestFile = path.join(where.manifestDir, `${NATIVE_HOST_NAME}.json`);
 		const body = goJSON(manifest, "  ");
 
 		if (isWindows()) {
@@ -271,10 +268,7 @@ export async function uninstallNativeHost(
 		}
 		printSuccess("removing files");
 
-		const manifestFile = path.join(
-			where.manifestDir,
-			`${NATIVE_HOST_NAME}.json`,
-		);
+		const manifestFile = path.join(where.manifestDir, `${NATIVE_HOST_NAME}.json`);
 		if (fileExists(manifestFile)) rmSync(manifestFile, { force: true });
 
 		unsetManifestRegistry(browser);

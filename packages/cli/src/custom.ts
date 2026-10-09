@@ -10,10 +10,10 @@
  * template written for Vale names them.
  */
 
-import type { Alert, Config, File } from "@vale-ts/core";
-import { findAsset, fileExists, newE100 } from "@vale-ts/core";
 import { readFileSync } from "node:fs";
 import * as path from "node:path";
+import type { Alert, Config, File } from "@vale-ts/core";
+import { fileExists, findAsset, newE100 } from "@vale-ts/core";
 import { FUNCS } from "./funcs.ts";
 import { stdout } from "./out.ts";
 import { Template } from "./template.ts";
@@ -36,10 +36,7 @@ function templateAlert(a: Alert): Record<string, unknown> {
 }
 
 /** Renders the alerts through the template, and reports whether any erred. */
-export function printCustomAlerts(
-	linted: readonly File[],
-	cfg: Config,
-): boolean {
+export function printCustomAlerts(linted: readonly File[], cfg: Config): boolean {
 	let found = cfg.flags.output;
 	if (!fileExists(found)) found = findAsset(cfg, found);
 

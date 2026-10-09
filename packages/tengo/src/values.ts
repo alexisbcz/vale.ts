@@ -37,6 +37,25 @@ export class TengoError extends Error {
 }
 
 /**
+ * Raised by something a running program did.
+ *
+ * Tengo prefixes these, and Vale shows the message as it is -- a style author
+ * sees `Zero.Boom: Runtime Error: not callable: int` -- so the prefix is part
+ * of the output rather than decoration. A compile-time failure keeps the bare
+ * `TengoError`, as Tengo's parse errors do.
+ */
+export class TengoRuntimeError extends TengoError {
+	/** The message without the prefix. */
+	readonly detail: string;
+
+	constructor(detail: string) {
+		super(`Runtime Error: ${detail}`);
+		this.name = "TengoRuntimeError";
+		this.detail = detail;
+	}
+}
+
+/**
  * Raised when a program outlives its deadline.
  *
  * A rule that loops without a way out would otherwise stop the caller with no

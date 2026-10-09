@@ -15,16 +15,11 @@
  * counted in characters -- onto indices into the file's text.
  */
 
-import type { Alert, CLIFlags, Config, File } from "@vale-ts/core";
-import {
-	fileExists,
-	isDir,
-	newE100,
-	readPipeline,
-} from "@vale-ts/core";
-import { fixAlert, Manager } from "@vale-ts/check";
-import { createLinter } from "@vale-ts/lint";
 import { readFileSync, writeFileSync } from "node:fs";
+import { fixAlert, Manager } from "@vale-ts/check";
+import type { Alert, CLIFlags, Config, File } from "@vale-ts/core";
+import { fileExists, isDir, newE100, readPipeline } from "@vale-ts/core";
+import { createLinter } from "@vale-ts/lint";
 import { println } from "./out.ts";
 import { printJSON } from "./util.ts";
 
@@ -267,8 +262,13 @@ export function spanOf(
 	const from = a.span[0] ?? 0;
 	const to = a.span[1] ?? 0;
 
-	if (a.span.length !== 2 || from < 1 || to < from || a.line < 1 ||
-		a.line > starts.length) {
+	if (
+		a.span.length !== 2 ||
+		from < 1 ||
+		to < from ||
+		a.line < 1 ||
+		a.line > starts.length
+	) {
 		return null;
 	}
 
@@ -298,7 +298,7 @@ function charIndex(s: string, n: number): number {
 	let seen = 0;
 	while (seen < n) {
 		if (i >= s.length) return -1;
-		i += (String.fromCodePoint(s.codePointAt(i) as number)).length;
+		i += String.fromCodePoint(s.codePointAt(i) as number).length;
 		seen++;
 	}
 	return i;

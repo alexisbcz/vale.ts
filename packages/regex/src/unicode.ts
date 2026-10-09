@@ -219,7 +219,6 @@ function probe(body: string): boolean {
 	if (cached !== undefined) return cached;
 	let ok = true;
 	try {
-		// biome-ignore lint/complexity/useRegexLiterals: the body is dynamic.
 		new RegExp(`\\p{${body}}`, "u");
 	} catch {
 		ok = false;

@@ -256,8 +256,7 @@ function flagLabel(spec: FlagSpec): string {
 /** Applies one flag's value to the set being built. */
 function assign(flags: CLIFlags, spec: FlagSpec, raw: string): void {
 	const target = flags as unknown as Record<string, unknown>;
-	target[spec.field] =
-		spec.kind === "bool" ? parseBool(spec, raw) : raw;
+	target[spec.field] = spec.kind === "bool" ? parseBool(spec, raw) : raw;
 }
 
 /**

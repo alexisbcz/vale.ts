@@ -8,22 +8,15 @@
  * that exits 2, but only after the rest have reported.
  */
 
-import { newE100, relToWD, type CLIFlags } from "@vale-ts/core";
+import { type CLIFlags, newE100, relToWD } from "@vale-ts/core";
 import { renderError } from "./error.ts";
 import { println, stdout } from "./out.ts";
 import { installPackages } from "./sync.ts";
-import { Add, Del, diff, type Line, Same } from "./testsuite/diff.ts";
+import { bold, gray, green, printError, printSuccess, red } from "./term.ts";
 import { ruleNames, uncovered } from "./testsuite/coverage.ts";
-import { failed, Runner, type Result } from "./testsuite/run.ts";
+import { Add, Del, diff, type Line, Same } from "./testsuite/diff.ts";
+import { failed, type Result, Runner } from "./testsuite/run.ts";
 import { findCases, loadCases } from "./testsuite/suite.ts";
-import {
-	bold,
-	gray,
-	green,
-	printError,
-	printSuccess,
-	red,
-} from "./term.ts";
 import { pluralize, printJSON } from "./util.ts";
 
 /**
@@ -114,9 +107,7 @@ export async function runTests(
 		if (broken > 0) {
 			throw newE100(
 				"test",
-				new Error(
-					`${broken} ${pluralize("case", broken)} could not run`,
-				),
+				new Error(`${broken} ${pluralize("case", broken)} could not run`),
 			);
 		}
 		if (failure !== null) throw failure;

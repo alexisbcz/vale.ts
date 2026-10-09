@@ -6,11 +6,11 @@
  * alerts and nothing else, so that is what they are given.
  */
 
-import type { Alert, File } from "@vale-ts/core";
-import { newAlert, sortAlerts } from "@vale-ts/core";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
+import type { Alert, File } from "@vale-ts/core";
+import { newAlert, sortAlerts } from "@vale-ts/core";
 
 /** An alert with the fields a test cares about. */
 export function alert(partial: Partial<Alert>): Alert {

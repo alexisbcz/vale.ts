@@ -203,6 +203,14 @@ export class Config {
 	sVocab: Record<string, string[]> = {};
 	/** The file each section's `BasedOnStyles` came from. */
 	styleSources: Record<string, string> = {};
+	/**
+	 * The sections already warned about for dropping a package's styles.
+	 *
+	 * The warning is about the configuration, and the configuration is read
+	 * once; the sections are resolved per file, so without this a project
+	 * linting a hundred files would see it a hundred times.
+	 */
+	readonly warnedStyleSections = new Set<string>();
 	/** Every vocabulary loaded, by name. */
 	vocabularies: Record<string, Vocabulary> = {};
 	/** HTML blocks whose contents are skipped entirely. */
@@ -357,7 +365,7 @@ export class Config {
 		let meta = false;
 		for (const [sec, cond] of Object.entries(this.secToCond)) {
 			const pat = this.secToPat[sec];
-			if (pat !== undefined && pat.match(path)) {
+			if (pat?.match(path)) {
 				matched.push(sec);
 				meta = meta || cond.readsMeta;
 			}
@@ -806,6 +814,44 @@ function styleSources(sources: readonly string[]): Record<string, string> {
 }
 
 /**
+ * Warns when a section replaces the styles a package turned on, dropping some.
+ *
+ * `vale sync` installs a package's own `.vale.ini`, which may switch styles on
+ * for a set of files; a project section matching the same files replaces that
+ * list rather than adding to it, so a style the package meant to run quietly
+ * stops. Naming both the package and the line that would keep it is the only
+ * way the reader can tell this from a style that simply never matched.
+ *
+ * `previous` is the list in force before `styles`, and `from` the section that
+ * set it -- `""` when that was the configuration's top level, which belongs to
+ * no package.
+ */
+export function warnDroppedStyles(
+	cfg: Config,
+	section: string,
+	from: string,
+	previous: readonly string[],
+	styles: readonly string[],
+): void {
+	if (from === "" || from === section) return;
+
+	const pkg = packageOf(cfg.styleSources[from] ?? "");
+	if (pkg === "") return;
+
+	const dropped = previous.filter((s) => !styles.includes(s));
+	if (dropped.length === 0) return;
+
+	if (cfg.warnedStyleSections.has(section)) return;
+	cfg.warnedStyleSections.add(section);
+
+	warn(
+		`[${section}] replaces the styles the ${pkg} package turns on for its ` +
+			`files (${dropped.join(", ")}). To keep them, list them too: ` +
+			`BasedOnStyles = ${[...dropped, ...styles].join(", ")}`,
+	);
+}
+
+/**
  * The package a configuration file came from, or "".
  *
  * `vale sync` writes a package's `.vale.ini` to `.vale-config/<n>-<Name>.ini`.
@@ -846,14 +892,14 @@ function patternsWithShadows(key: Key): string[] {
 export function splitEscaped(s: string, delim: string): string[] {
 	const vals: string[] = [];
 	let buf = "";
-	let escape = false;
+	let escaped = false;
 	for (const r of s) {
-		if (escape) {
+		if (escaped) {
 			if (r !== delim) buf += "\\";
 			buf += r;
-			escape = false;
+			escaped = false;
 		} else if (r === "\\") {
-			escape = true;
+			escaped = true;
 		} else if (r === delim) {
 			vals.push(buf);
 			buf = "";
@@ -861,7 +907,7 @@ export function splitEscaped(s: string, delim: string): string[] {
 			buf += r;
 		}
 	}
-	if (escape) buf += "\\";
+	if (escaped) buf += "\\";
 	vals.push(buf);
 	return vals;
 }

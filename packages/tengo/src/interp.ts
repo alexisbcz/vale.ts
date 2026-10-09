@@ -41,7 +41,8 @@ import {
 	makeInt,
 	makeMap,
 	makeString,
-	TengoError,
+	type TengoError,
+	TengoRuntimeError,
 	TengoTimeout,
 	truthy,
 	typeName,
@@ -160,7 +161,7 @@ export class Interpreter {
 
 	/** The same failure as `fail`, to be thrown where a `throw` reads better. */
 	private error(message: string): TengoError {
-		return new TengoError(message);
+		return new TengoRuntimeError(message);
 	}
 
 	// --- statements -------------------------------------------------------

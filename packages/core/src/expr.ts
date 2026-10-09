@@ -20,10 +20,29 @@ export type Value = unknown;
 export type Environment = Record<string, Value>;
 
 export class ExprError extends Error {
-	constructor(message: string) {
+	/**
+	 * The token the error is about, when it is about one.
+	 *
+	 * Kept so the error can be re-pointed: a condition is compiled inside
+	 * `any(Files, {...})`, and running out of tokens inside the braces is, to
+	 * Go, the closing brace arriving early.
+	 */
+	readonly token: Token | null;
+	/** Whether the wording is `unexpected token <token>`. */
+	readonly aboutToken: boolean;
+
+	constructor(message: string, token: Token | null = null, aboutToken = false) {
 		super(message);
 		this.name = "ExprError";
+		this.token = token;
+		this.aboutToken = aboutToken;
 	}
+}
+
+/** The text Go compiles around an expression, for reporting errors in it. */
+export interface ExprFrame {
+	prefix: string;
+	suffix: string;
 }
 
 /** How an expression is compiled. */
@@ -38,6 +57,106 @@ export interface CompileOptions {
 	 * is judged by its truthiness, which is the whole point of `.Meta.draft`.
 	 */
 	asBool?: boolean;
+	/**
+	 * What Go compiles the expression inside of.
+	 *
+	 * A section's `if` becomes the body of `any(Files, {...})`, and `expr`
+	 * reports a position in *that* text. This port parses the condition on its
+	 * own -- the wrapper adds nothing to evaluate, since there is one file --
+	 * so the frame is carried here and applied when an error is worded.
+	 */
+	frame?: ExprFrame;
+}
+
+/**
+ * How `expr` names a token in an error.
+ *
+ * Its lexer has five kinds, and an error quotes the offending token as
+ * `Kind("text")` -- `Bracket("}")`, `Operator("==")`. The wording is what a
+ * person reading Vale's documentation sees, so it is reproduced.
+ */
+function tokenText(tok: Token): string {
+	const kind =
+		tok.type === "punct" && BRACKETS.has(tok.value)
+			? "Bracket"
+			: TOKEN_KINDS[tok.type];
+	if (tok.value === "") return kind;
+	return `${kind}(${JSON.stringify(tok.value)})`;
+}
+
+/** This lexer's token types, named the way `expr`'s lexer names them. */
+const TOKEN_KINDS: Record<TokenType, string> = {
+	number: "Number",
+	string: "String",
+	identifier: "Identifier",
+	operator: "Operator",
+	// `expr` separates the brackets from the other punctuation, so this is
+	// the fallback for a comma or a colon; `tokenText` picks out a bracket.
+	punct: "Operator",
+	eof: "EOF",
+};
+
+/** The punctuation `expr` calls a bracket rather than an operator. */
+const BRACKETS = new Set(["(", ")", "[", "]", "{", "}"]);
+
+function unexpected(tok: Token): ExprError {
+	return new ExprError(`unexpected token ${tokenText(tok)}`, tok, true);
+}
+
+/**
+ * Adds the position and the excerpt `expr` puts on a compile error.
+ *
+ * ```text
+ * unexpected token Bracket("}") (1:31)
+ *  | any(Files, {.Meta.published ==})
+ *  | ..............................^
+ * ```
+ *
+ * The excerpt is dropped by `--output=line`, which keeps the first line of a
+ * message, and kept by `--output=JSON`, which is where it is visible.
+ */
+function locate(err: ExprError, source: string, frame?: ExprFrame): ExprError {
+	const tok = err.token;
+	if (tok === null) return err;
+
+	const prefix = frame?.prefix ?? "";
+	const suffix = frame?.suffix ?? "";
+	const full = prefix + source + suffix;
+
+	let at = prefix.length + tok.at;
+	let message = err.message;
+
+	// Running out of tokens inside the frame is not the end of the text: it is
+	// the frame's own next token, which is what Go reports.
+	if (tok.type === "eof" && suffix !== "" && err.aboutToken) {
+		const next = lex(suffix)[0];
+		if (next !== undefined) {
+			at = prefix.length + source.length + next.at;
+			message = unexpected(next).message;
+		}
+	}
+
+	const start = full.lastIndexOf("\n", at - 1) + 1;
+	const end = full.indexOf("\n", at);
+	const text = full.slice(start, end < 0 ? full.length : end);
+	const line = countLines(full, at);
+	const column = at - start + 1;
+	const caret = `${".".repeat(column - 1)}^`;
+
+	return new ExprError(
+		`${message} (${line}:${column})\n | ${text}\n | ${caret}`,
+		tok,
+		err.aboutToken,
+	);
+}
+
+/** The 1-based line `at` falls on. */
+function countLines(src: string, at: number): number {
+	let line = 1;
+	for (let i = 0; i < at && i < src.length; i++) {
+		if (src[i] === "\n") line++;
+	}
+	return line;
 }
 
 /** A compiled expression. */
@@ -47,15 +166,20 @@ export class Expression {
 
 	constructor(source: string, options: CompileOptions = {}) {
 		this.source = source;
-		const parser = new Parser(source);
-		this.node = parser.parseExpression(0);
-		parser.expectEnd();
+		try {
+			const parser = new Parser(source);
+			this.node = parser.parseExpression(0);
+			parser.expectEnd();
 
-		if (options.asBool === true) {
-			const kind = staticKind(this.node);
-			if (kind !== "bool" && kind !== "unknown") {
-				throw new ExprError(`expected a condition, found a ${kind}`);
+			if (options.asBool === true) {
+				const kind = staticKind(this.node);
+				if (kind !== "bool" && kind !== "unknown") {
+					throw new ExprError(`expected a condition, found a ${kind}`);
+				}
 			}
+		} catch (err) {
+			if (err instanceof ExprError) throw locate(err, source, options.frame);
+			throw err;
 		}
 	}
 
@@ -372,7 +496,7 @@ class Parser {
 
 	expectEnd(): void {
 		if (this.peek().type !== "eof") {
-			throw new ExprError(`unexpected '${this.peek().value}'`);
+			throw unexpected(this.peek());
 		}
 	}
 
@@ -560,7 +684,7 @@ class Parser {
 			return { kind: "identifier", name: tok.value };
 		}
 
-		throw new ExprError(`unexpected '${tok.value}'`);
+		throw unexpected(tok);
 	}
 }
 

@@ -47,13 +47,14 @@ import {
 	makeBuiltin,
 	makeFloat,
 	TengoError,
+	TengoRuntimeError,
 	TengoTimeout,
 	toJS,
 	wrongArgs,
 } from "./values.ts";
 
 export { setPrinter } from "./stdlib/fmt.ts";
-export { MODULE_NAMES, TengoError, TengoTimeout };
+export { MODULE_NAMES, TengoError, TengoRuntimeError, TengoTimeout };
 
 /**
  * How a `metric` rule's formula is compiled: as a single expression, with

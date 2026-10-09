@@ -9,8 +9,8 @@
  */
 
 import { readFileSync } from "node:fs";
-import { parse as parseYAML } from "yaml";
 import { newE201FromPosition, newE201FromTarget } from "./errors.ts";
+import { parseLenient } from "./yaml.ts";
 
 /**
  * The names Vale gives its own scopes and terms.
@@ -67,7 +67,7 @@ export function loadScopeFile(holder: ScopeHolder, path: string): void {
 
 	let defined: unknown;
 	try {
-		defined = parseYAML(body);
+		defined = parseLenient(body);
 	} catch (err) {
 		throw newE201FromPosition(
 			`a mapping of names to scopes: ${err instanceof Error ? err.message : String(err)}`,

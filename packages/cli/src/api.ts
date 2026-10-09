@@ -5,10 +5,10 @@
  * archive and unpacking it into a directory.
  */
 
-import { newE100 } from "@vale-ts/core";
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
+import { newE100 } from "@vale-ts/core";
 import { unarchive } from "./unarchive.ts";
 
 /** An externally hosted style, as the package library lists it. */
@@ -71,9 +71,7 @@ export async function fetchArchive(src: string, dst: string): Promise<void> {
 	}
 
 	if (!resp.ok) {
-		throw new Error(
-			`could not fetch '${src}' (status code '${resp.status}')`,
-		);
+		throw new Error(`could not fetch '${src}' (status code '${resp.status}')`);
 	}
 
 	// A temporary file rather than a buffer, so the ZIP reader sees the same

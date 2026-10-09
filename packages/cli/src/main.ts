@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+
 /**
  * `vale`: argument handling, the three input cases, and the exit codes.
  *
@@ -16,28 +17,17 @@
  * single argument looks like a path that does not exist.
  */
 
-import type { Config, File } from "@vale-ts/core";
-import {
-	fileExists,
-	isDir,
-	newE100,
-	readPipeline,
-	ValeError,
-} from "@vale-ts/core";
-import { Manager } from "@vale-ts/check";
-import {
-	createLinter,
-	DocumentErrors,
-	initCode,
-	type Linter,
-} from "@vale-ts/lint";
 import { fstatSync } from "node:fs";
+import { Manager } from "@vale-ts/check";
+import type { Config, File } from "@vale-ts/core";
+import { fileExists, isDir, newE100, readPipeline, ValeError } from "@vale-ts/core";
+import { createLinter, DocumentErrors, initCode, type Linter } from "@vale-ts/lint";
 import { COMMANDS } from "./command.ts";
 import { printAlerts } from "./common.ts";
 import { showError } from "./error.ts";
 import { FlagError, parseFlags } from "./flags.ts";
-import { countAlerts, printJSONAlertsWithCounts } from "./json.ts";
 import { printCommandUsage, printIntro, printUsage } from "./info.ts";
+import { countAlerts, printJSONAlertsWithCounts } from "./json.ts";
 import { errorln, println, stderr, stdout } from "./out.ts";
 import { startProfiling } from "./profile.ts";
 import { didYouMean, reportUnknownCommand } from "./suggest.ts";
@@ -99,10 +89,7 @@ async function doLint(
 		// Case 2: `vale file1 dir1 file2`.
 		for (const file of args) {
 			if (looksLikeStdin(file) === 1) {
-				throw newE100(
-					"input",
-					new Error(`argument '${file}' does not exist`),
-				);
+				throw newE100("input", new Error(`argument '${file}' does not exist`));
 			}
 		}
 		return linter.lint(args, glob);

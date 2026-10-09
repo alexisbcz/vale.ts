@@ -12,13 +12,13 @@ describe("goJSON", () => {
 	});
 
 	test("a map's keys are sorted", () => {
-		expect(goJSON(asMap({ b: 1, a: 2 }), "  ")).toBe(
-			'{\n  "a": 2,\n  "b": 1\n}',
-		);
+		expect(goJSON(asMap({ b: 1, a: 2 }), "  ")).toBe('{\n  "a": 2,\n  "b": 1\n}');
 	});
 
 	test("the three HTML characters are escaped", () => {
-		expect(goJSON("<b> & </b>", "")).toBe('"\\u003cb\\u003e \\u0026 \\u003c/b\\u003e"');
+		expect(goJSON("<b> & </b>", "")).toBe(
+			'"\\u003cb\\u003e \\u0026 \\u003c/b\\u003e"',
+		);
 	});
 
 	test("control characters and quotes", () => {

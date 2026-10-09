@@ -18,8 +18,8 @@
  * is still an error: a file this cannot read is one `yaml.v3` could not read.
  */
 
+import type { Document, YAMLParseError, YAMLWarning } from "yaml";
 import { parseDocument } from "yaml";
-import type { Document } from "yaml";
 
 /**
  * The errors `yaml.v3` accepts and this parser does not.
@@ -29,6 +29,22 @@ import type { Document } from "yaml";
  * running.
  */
 const TOLERATED = new Set(["DUPLICATE_KEY", "BAD_DQ_ESCAPE"]);
+
+/**
+ * The parser options that accept what `yaml.v3` accepts.
+ *
+ * Exported for the few callers that need the document rather than the value:
+ * pair them with `fatalYAMLErrors`, which is what decides whether the file
+ * could be read.
+ */
+export const LENIENT = { uniqueKeys: false, keepSourceTokens: true } as const;
+
+/** The errors in a parsed document that Vale would not accept. */
+export function fatalYAMLErrors(
+	doc: Document.Parsed,
+): Array<YAMLParseError | YAMLWarning> {
+	return doc.errors.filter((e) => !TOLERATED.has(e.code));
+}
 
 /** Where a YAML error is, as a 1-based line and column. */
 export interface YAMLErrorPosition {
@@ -65,26 +81,44 @@ export class YAMLError extends Error {
  * because one code covers several mistakes that `yaml.v3` reports differently.
  */
 const GO_WORDING: Array<[string, string, string]> = [
-	[
-		"BLOCK_AS_IMPLICIT_KEY",
-		"",
-		"mapping values are not allowed in this context",
-	],
+	["BLOCK_AS_IMPLICIT_KEY", "", "mapping values are not allowed in this context"],
 	[
 		"BAD_INDENT",
 		"Flow sequence in block collection",
-		"did not find expected node content",
+		"did not find expected ',' or ']'",
 	],
 	["MISSING_CHAR", "Flow map must end with", "did not find expected node content"],
-	["MISSING_CHAR", "Flow sequence must end with", "did not find expected node content"],
+	[
+		"MISSING_CHAR",
+		"Flow sequence must end with",
+		"did not find expected node content",
+	],
 	["BAD_SCALAR_START", "", "did not find expected node content"],
 	["MULTILINE_IMPLICIT_KEY", "", "could not find expected ':'"],
 	["MISSING_CHAR", "Unexpected", "did not find expected key"],
 ];
 
-/** The message `yaml.v3` would give for this error. */
-export function goWording(code: string, message: string): string {
+/**
+ * The message `yaml.v3` would give for this error.
+ *
+ * `others` is the rest of the errors the parse reported, which one case needs:
+ * a flow sequence left open inside a *block* mapping is a missing `]`, and
+ * inside a *flow* mapping -- `{ "cells": [` -- it is the node that never
+ * arrived. This parser words both the same and reports the unclosed brace as a
+ * second error, which is what tells them apart.
+ */
+export function goWording(
+	code: string,
+	message: string,
+	others: ReadonlyArray<{ code: string; message: string }> = [],
+): string {
 	const stated = message.split(" at line")[0] ?? message;
+	if (code === "BAD_INDENT" && stated.startsWith("Flow sequence in block")) {
+		const inFlowMap = others.some(
+			(e) => e.code === "MISSING_CHAR" && e.message.startsWith("Flow map must end"),
+		);
+		if (inFlowMap) return "did not find expected node content";
+	}
 	for (const [wantCode, prefix, wording] of GO_WORDING) {
 		if (code === wantCode && stated.startsWith(prefix)) return wording;
 	}
@@ -98,14 +132,14 @@ export function goWording(code: string, message: string): string {
  * accept, so a caller can report it as an `E201` at that line.
  */
 export function parseLenientDocument(src: string): Document.Parsed {
-	const doc = parseDocument(src, { uniqueKeys: false, keepSourceTokens: true });
+	const doc = parseDocument(src, LENIENT);
 
-	const fatal = doc.errors.filter((e) => !TOLERATED.has(e.code));
+	const fatal = fatalYAMLErrors(doc);
 	if (fatal.length > 0) {
 		const first = fatal[0]!;
 		const [line, column] = positionOfOffset(src, first.pos[0]);
 		throw new YAMLError(
-			{ line, column, message: goWording(first.code, first.message) },
+			{ line, column, message: goWording(first.code, first.message, fatal) },
 			first.message,
 		);
 	}
@@ -144,10 +178,7 @@ export function tryParseLenient(src: string): unknown | null {
 }
 
 /** The 1-based line and column of an offset into `src`. */
-export function positionOfOffset(
-	src: string,
-	offset: number,
-): [number, number] {
+export function positionOfOffset(src: string, offset: number): [number, number] {
 	let line = 1;
 	let start = 0;
 	for (let i = 0; i < offset && i < src.length; i++) {

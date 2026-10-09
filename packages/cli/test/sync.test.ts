@@ -8,9 +8,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { zipSync } from "fflate";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
+import { zipSync } from "fflate";
 import { run } from "../src/main.ts";
 import { capture } from "../src/out.ts";
 import { pkgRoot } from "../src/sync.ts";
@@ -37,7 +37,7 @@ function write(dir: string, files: Record<string, string>): void {
 }
 
 const RULE =
-	'extends: existence\nmessage: "\'%s\' left in text"\nlevel: error\ntokens:\n  - TODO\n';
+	"extends: existence\nmessage: \"'%s' left in text\"\nlevel: error\ntokens:\n  - TODO\n";
 
 describe("pkgRoot", () => {
 	test("an exact name wins, and a different casing is the fallback", async () => {
@@ -122,9 +122,9 @@ describe("a local zip package", () => {
 				code = await run(["--no-global", "sync", "--plain-progress"]);
 			});
 			expect(code).toBe(0);
-			expect(
-				readFileSync(path.join(dir, "styles/Zipped/Live.yml"), "utf8"),
-			).toBe(RULE);
+			expect(readFileSync(path.join(dir, "styles/Zipped/Live.yml"), "utf8")).toBe(
+				RULE,
+			);
 
 			const lint = await capture(async () => {
 				code = await run(["--no-global", "--output=line", "doc.md"]);

@@ -34,7 +34,13 @@ export {
 	resolveFix,
 } from "./action.ts";
 export type { ExpandFunc } from "./affix.ts";
-export { affixExpander, affixToken, affixTokens, findAffix } from "./affix.ts";
+export {
+	affixExpander,
+	affixToken,
+	affixTokens,
+	findAffix,
+	registerSpeller,
+} from "./affix.ts";
 export { anchor, runeSpanToBytes } from "./anchor.ts";
 export { buildRule } from "./build.ts";
 export { Capitalization } from "./capitalization.ts";

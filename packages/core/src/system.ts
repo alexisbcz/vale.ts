@@ -175,6 +175,7 @@ export interface WalkEntry {
  */
 export function walk(
 	root: string,
+	// biome-ignore lint/suspicious/noConfusingVoidType: a visitor may return nothing.
 	walkFn: (entry: WalkEntry) => boolean | void,
 ): void {
 	// A root that is not there is the caller's mistake, not an empty tree:
@@ -192,6 +193,7 @@ export function walk(
 function walkFrom(
 	real: string,
 	reported: string,
+	// biome-ignore lint/suspicious/noConfusingVoidType: a visitor may return nothing.
 	walkFn: (entry: WalkEntry) => boolean | void,
 ): void {
 	let info: ReturnType<typeof lstatSync>;

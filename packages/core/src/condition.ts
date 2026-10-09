@@ -58,7 +58,10 @@ export class Condition {
 		// condition is written as a predicate over one file, and an expression
 		// that cannot be a boolean is refused here rather than silently read as
 		// true for every file.
-		this.program = compileExpr(source, { asBool: true });
+		this.program = compileExpr(source, {
+			asBool: true,
+			frame: { prefix: "any(Files, {", suffix: "})" },
+		});
 		this.readsMeta = source.includes(".Meta");
 	}
 

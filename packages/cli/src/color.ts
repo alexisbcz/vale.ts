@@ -37,8 +37,7 @@ export function printVerboseAlerts(linted: readonly File[]): boolean {
 		total.suggestions,
 	)}`;
 
-	const symbol =
-		total.errors > 0 || total.warnings > 0 ? "✖" : "✔";
+	const symbol = total.errors > 0 || total.warnings > 0 ? "✖" : "✔";
 
 	const n = linted.length;
 	const where =

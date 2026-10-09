@@ -630,7 +630,7 @@ function parseYAMLDefinition(file: string, path: string): BaseCheck {
 	return value as BaseCheck;
 }
 
-function lineOf(src: string, offset: number): number {
+function _lineOf(src: string, offset: number): number {
 	let line = 1;
 	for (let i = 0; i < offset && i < src.length; i++) {
 		if (src[i] === "\n") line++;

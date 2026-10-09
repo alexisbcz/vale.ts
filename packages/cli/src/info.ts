@@ -10,8 +10,8 @@
 import type { Command } from "./command.ts";
 import { COMMANDS, visibleCommandNames } from "./command.ts";
 import { FLAGS, SHORTCODES } from "./flags.ts";
-import { println } from "./out.ts";
 import type { Writer } from "./out.ts";
+import { println } from "./out.ts";
 import { bold, code, renderBorderless, underline } from "./term.ts";
 
 const EXAMPLE_CONFIG = `MinAlertLevel = suggestion
@@ -132,11 +132,7 @@ export function printUsage(write: Writer): void {
 }
 
 /** Writes one command's help. */
-export function printCommandUsage(
-	write: Writer,
-	name: string,
-	cmd: Command,
-): void {
+export function printCommandUsage(write: Writer, name: string, cmd: Command): void {
 	write(`vale ${name} - ${cmd.summary}\n\n`);
 
 	const usage = cmd.usage === undefined || cmd.usage === "" ? name : cmd.usage;
@@ -164,6 +160,7 @@ function section(write: Writer, title: string, rows: string[][]): void {
  * styling.
  */
 function flagName(cell: string): string {
+	// biome-ignore lint/suspicious/noControlCharactersInRegex: the escape sequence is what is stripped.
 	const plain = cell.replace(/\u001b\[[0-9;]*m/g, "");
 	const at = plain.indexOf("--");
 	return at < 0 ? plain : plain.slice(at + 2);

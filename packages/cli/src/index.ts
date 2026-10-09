@@ -16,7 +16,7 @@
 
 export type { Meta, Release, Style } from "./api.ts";
 export { fetchArchive } from "./api.ts";
-export type { FixedFile, FixEdit, FixSkip } from "./apply.ts";
+export type { FixEdit, FixedFile, FixSkip } from "./apply.ts";
 export {
 	applyFixes,
 	fixFile,
@@ -35,17 +35,17 @@ export { asValeError, banner, showError } from "./error.ts";
 export type { FlagKind, FlagSpec, ParseResult } from "./flags.ts";
 export { FLAGS, FlagError, parseFlags, SHORTCODES } from "./flags.ts";
 export { FUNCS } from "./funcs.ts";
-export type { Writer } from "./out.ts";
-export { capture, errorln, println, stderr, stdout } from "./out.ts";
+export { printCommandUsage, printIntro, printUsage } from "./info.ts";
 export {
 	alertJSON,
 	countAlerts,
 	printJSONAlerts,
 	printJSONAlertsWithCounts,
 } from "./json.ts";
-export { printCommandUsage, printIntro, printUsage } from "./info.ts";
 export { printLineAlerts } from "./line.ts";
 export { run } from "./main.ts";
+export type { Writer } from "./out.ts";
+export { capture, errorln, println, stderr, stdout } from "./out.ts";
 export {
 	pkgMeta,
 	releaseTags,
@@ -84,14 +84,20 @@ export {
 	renderTable,
 } from "./term.ts";
 export { runTests, TestFailed } from "./test.ts";
-export type { Case } from "./testsuite/suite.ts";
-export { caseExt, findCases, loadCases } from "./testsuite/suite.ts";
+export { isRule, ruleNames, uncovered } from "./testsuite/coverage.ts";
 export type { Line } from "./testsuite/diff.ts";
 export { Add, Del, diff, Same } from "./testsuite/diff.ts";
 export type { Result } from "./testsuite/run.ts";
 export { compare, failed, isolatedName, Runner } from "./testsuite/run.ts";
-export { isRule, ruleNames, uncovered } from "./testsuite/coverage.ts";
-export { colorOn, configureColor, detectTerminal, isTTY, setTerminal } from "./tty.ts";
+export type { Case } from "./testsuite/suite.ts";
+export { caseExt, findCases, loadCases } from "./testsuite/suite.ts";
+export {
+	colorOn,
+	configureColor,
+	detectTerminal,
+	isTTY,
+	setTerminal,
+} from "./tty.ts";
 export {
 	destinationFor,
 	MAX_UNARCHIVED_FILE,

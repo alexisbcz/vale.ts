@@ -5,8 +5,8 @@
  * byte-for-byte.
  */
 
-import type { File } from "@vale-ts/core";
 import * as path from "node:path";
+import type { File } from "@vale-ts/core";
 import { println } from "./out.ts";
 
 /**
@@ -34,7 +34,7 @@ export function printLineAlerts(
 		// Run from a parent directory of the file, a shorter path is shown --
 		// `testdata/test.cc: ...` rather than the whole of it.
 		const base =
-			relative && f.path.includes(dir) ? f.path.split(dir)[1] ?? f.path : f.path;
+			relative && f.path.includes(dir) ? (f.path.split(dir)[1] ?? f.path) : f.path;
 
 		for (const a of f.sortedAlerts()) {
 			if (a.severity === "error") errors++;

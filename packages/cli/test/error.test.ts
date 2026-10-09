@@ -7,9 +7,9 @@
  */
 
 import { beforeEach, describe, expect, test } from "bun:test";
-import { newE100, newE201FromTarget, ValeError } from "@vale-ts/core";
 import { writeFileSync } from "node:fs";
 import * as path from "node:path";
+import { newE100, newE201FromTarget, ValeError } from "@vale-ts/core";
 import { asValeError, banner, showError } from "../src/error.ts";
 import { setTerminal } from "../src/tty.ts";
 import { withTempDir } from "./helpers.ts";
@@ -55,10 +55,7 @@ describe("showError", () => {
 	test("an E201 keeps its position through the E100 around it", () => {
 		withTempDir((dir) => {
 			const ini = path.join(dir, ".vale.ini");
-			writeFileSync(
-				ini,
-				"StylesPath = styles\n[*.md]\nBasedOnStyles = Nope\n",
-			);
+			writeFileSync(ini, "StylesPath = styles\n[*.md]\nBasedOnStyles = Nope\n");
 
 			const e201 = newE201FromTarget(
 				"first paragraph\n\nsecond paragraph",

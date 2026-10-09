@@ -6,9 +6,9 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { newAlert } from "@vale-ts/core";
 import { mkdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
+import { newAlert } from "@vale-ts/core";
 import {
 	type FixedFile,
 	lineOffsets,
@@ -38,16 +38,16 @@ function fixture(dir: string): void {
 		".vale.ini":
 			"StylesPath = styles\nMinAlertLevel = suggestion\n\n[*]\nBasedOnStyles = T\n",
 		"styles/T/Swap.yml":
-			'extends: substitution\nmessage: "Use \'%s\'."\nlevel: warning\n' +
+			"extends: substitution\nmessage: \"Use '%s'.\"\nlevel: warning\n" +
 			"action:\n  name: replace\nswap:\n  utilize: use\n  leverage: exploit\n",
 		"styles/T/Multi.yml":
-			'extends: existence\nmessage: "Vague: \'%s\'."\nlevel: warning\n' +
+			"extends: existence\nmessage: \"Vague: '%s'.\"\nlevel: warning\n" +
 			"action:\n  name: replace\n  params:\n    - alpha\n    - beta\ntokens:\n  - vagueterm\n",
 		"styles/T/OverA.yml":
-			'extends: substitution\nmessage: "Use \'%s\'."\nlevel: warning\n' +
+			"extends: substitution\nmessage: \"Use '%s'.\"\nlevel: warning\n" +
 			"action:\n  name: replace\nswap:\n  quite bad: poor\n",
 		"styles/T/OverB.yml":
-			'extends: substitution\nmessage: "Use \'%s\'."\nlevel: warning\n' +
+			"extends: substitution\nmessage: \"Use '%s'.\"\nlevel: warning\n" +
 			"action:\n  name: replace\nswap:\n  bad outcome: failure\n",
 	};
 
@@ -175,9 +175,7 @@ describe("fix --apply", () => {
 			);
 
 			// A file with nothing to apply is neither rewritten nor touched.
-			expect(readFileSync(clean, "utf8")).toBe(
-				"Nothing actionable here at all.\n",
-			);
+			expect(readFileSync(clean, "utf8")).toBe("Nothing actionable here at all.\n");
 			expect(statSync(clean).mtimeMs).toBe(before);
 
 			expect(out.out).toContain("applied 2, skipped 3");
@@ -192,7 +190,7 @@ describe("fix --apply", () => {
 			fixture(dir);
 			writeFileSync(
 				path.join(dir, "styles", "T", "Drop.yml"),
-				'extends: existence\nmessage: "Drop \'%s\'."\nlevel: warning\n' +
+				"extends: existence\nmessage: \"Drop '%s'.\"\nlevel: warning\n" +
 					"action:\n  name: remove\ntokens:\n  - very\n",
 			);
 
@@ -204,9 +202,7 @@ describe("fix --apply", () => {
 				code = await run(["--no-global", "fix", "--apply", doc]);
 			});
 			expect(code).toBe(0);
-			expect(readFileSync(doc, "utf8")).toBe(
-				"This is good.\n\nIt is fine,\n",
-			);
+			expect(readFileSync(doc, "utf8")).toBe("This is good.\n\nIt is fine,\n");
 		});
 	});
 
@@ -218,13 +214,7 @@ describe("fix --apply", () => {
 
 			let code = -1;
 			const out = await capture(async () => {
-				code = await run([
-					"--no-global",
-					"--output=JSON",
-					"fix",
-					"--apply",
-					doc,
-				]);
+				code = await run(["--no-global", "--output=JSON", "fix", "--apply", doc]);
 			});
 			expect(code).toBe(0);
 
@@ -249,9 +239,7 @@ describe("fix --apply", () => {
 				]);
 			});
 			expect(code).toBe(2);
-			expect(out.err.trim()).toBe(
-				"[fix]:E100:path 'nope.md' does not exist",
-			);
+			expect(out.err.trim()).toBe("[fix]:E100:path 'nope.md' does not exist");
 		});
 	});
 

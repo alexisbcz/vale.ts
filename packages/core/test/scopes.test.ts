@@ -69,7 +69,7 @@ describe("loadScopes", () => {
 	];
 
 	test.each(rejects)("rejects $name", ({ name, body, want }) => {
-		const files =
+		const files: Record<string, string> =
 			name === "conflict"
 				? { "A.yml": "methods: doc(h1)\n", "B.yml": "methods: doc(h2)\n" }
 				: { "Bad.yml": body };

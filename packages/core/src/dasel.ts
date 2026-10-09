@@ -77,6 +77,10 @@ export function selectValues(value: unknown, expr: string): unknown[] {
 	try {
 		return run(value, expr, "v3");
 	} catch (v3err) {
+		// A function dasel does not have is a mistake in the selector, not a
+		// selector written in the other dialect -- and v2, which reads a call
+		// as a property, would quietly answer something else.
+		if (message(v3err).startsWith("unknown function")) throw v3err;
 		try {
 			return run(value, expr, "v2");
 		} catch (v2err) {
@@ -94,8 +98,33 @@ export function selectStrings(value: unknown, expr: string): string[] {
 	return out;
 }
 
+/**
+ * Applies the selector, reading it one step at a time.
+ *
+ * Reading it lazily is what dasel does, and it decides which of two mistakes
+ * is reported: `this.is.not.valid.[[[` against a list fails on `this` -- a
+ * property read on a list -- and never reaches the brackets. Parsing the whole
+ * selector first would report the brackets instead.
+ */
 function run(value: unknown, expr: string, dialect: Dialect): unknown[] {
-	return apply(parseSelector(expr, dialect), [value], dialect);
+	const segments = splitSegments(expr.trim());
+	let current: unknown[] = [value];
+	let read = 0;
+
+	for (let i = 0; i < segments.length; i++) {
+		const seg = segments[i]!;
+		if (seg === "") {
+			// A leading dot is v2's; anywhere else an empty segment is a
+			// doubled or trailing dot.
+			if (i === 0 && segments.length > 1) continue;
+			throw new Error(`empty step in selector ${quote(expr)}`);
+		}
+		current = apply(parseStep(seg, dialect), current, dialect);
+		read++;
+	}
+
+	if (read === 0) throw new Error("empty selector");
+	return current;
 }
 
 function message(err: unknown): string {
@@ -105,7 +134,13 @@ function message(err: unknown): string {
 // ---------------------------------------------------------------------------
 // Parsing
 
-/** Splits a selector into its steps. */
+/**
+ * Splits a selector into its steps, all at once.
+ *
+ * Only `map()`'s argument is read this way: it is one selector applied to
+ * every element, so there is no partial result for an error in it to be
+ * reported after.
+ */
 function parseSelector(expr: string, dialect: Dialect): Step[] {
 	const segments = splitSegments(expr.trim());
 	const steps: Step[] = [];
@@ -155,8 +190,9 @@ function splitSegments(expr: string): string[] {
 				break;
 			case ")":
 			case "]":
-				depth--;
-				if (depth < 0) throw new Error(`unbalanced brackets in ${quote(expr)}`);
+				// A bracket too many leaves the depth negative, which only
+				// means the dots after it separate steps again.
+				if (depth > 0) depth--;
 				break;
 			case ".":
 				if (depth === 0) {
@@ -167,9 +203,6 @@ function splitSegments(expr: string): string[] {
 			default:
 				break;
 		}
-	}
-	if (depth !== 0 || quoted !== "") {
-		throw new Error(`unbalanced brackets in ${quote(expr)}`);
 	}
 	out.push(expr.slice(start));
 	return out;
@@ -183,10 +216,25 @@ const NAME_RE = /^[^.[\]()"'?,\s]+$/;
 function parseStep(seg: string, dialect: Dialect): Step[] {
 	const call = CALL_RE.exec(seg);
 	if (call !== null) {
+		// v2 has no function steps. Rather than refuse the selector, it reads
+		// what is inside the parentheses as a property name, which is why
+		// `messages.filter(role == "assistant")` reports a property called
+		// `role == "assistant"`.
 		if (dialect === "v2") {
-			throw new Error(`unexpected function call: ${quote(seg)}`);
+			return [{ kind: "property", name: call[2]!.trim(), optional: false }];
 		}
-		return [parseCall(call[1]!, call[2]!)];
+		try {
+			return [parseCall(call[1]!, call[2]!)];
+		} catch (err) {
+			// A function this does not have is a mistake worth naming. One it
+			// has, called in a way outside this subset -- `filter(role ==
+			// "assistant")`, which wants an expression language -- is read as a
+			// property whose name happens to hold parentheses, which is how
+			// dasel reads it: the message then says what the data is rather
+			// than what the selector said.
+			if (message(err).startsWith("unknown function")) throw err;
+			return [{ kind: "property", name: seg, optional: false }];
+		}
 	}
 
 	// `name`, `[0]`, `name[0]`, `[]` -- the subscripts trail the name.
@@ -235,7 +283,7 @@ function subscripts(tail: string, seg: string): string[] {
 	while (at < tail.length) {
 		if (tail[at] !== "[") throw new Error(`cannot read step ${quote(seg)}`);
 		const close = tail.indexOf("]", at);
-		if (close < 0) throw new Error(`cannot read step ${quote(seg)}`);
+		if (close < 0) throw new Error(`unbalanced brackets in ${quote(seg)}`);
 		out.push(tail.slice(at + 1, close).trim());
 		at = close + 1;
 	}
@@ -486,10 +534,21 @@ function kindOf(value: unknown): string {
 function notAMap(hit: unknown, name: string, dialect: Dialect): Error {
 	if (dialect === "v2") {
 		return new Error(
-			`cannot use property selector on non map/struct types: ${kindOf(hit)}: property not found: ${name}`,
+			`cannot use property selector on non map/struct types: ${goKind(hit)}: property not found: ${name}`,
 		);
 	}
 	return new Error(`unexpected type: expected map, got ${kindOf(hit)}`);
+}
+
+/**
+ * The name Go's reflection gives a value's type.
+ *
+ * v2's messages are built from a `reflect.Kind`, so a list is a `slice` there
+ * and an `array` in the other dialect's wording.
+ */
+function goKind(value: unknown): string {
+	const kind = kindOf(value);
+	return kind === "array" ? "slice" : kind;
 }
 
 function missing(name: string, dialect: Dialect): Error {

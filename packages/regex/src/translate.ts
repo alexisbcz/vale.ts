@@ -91,7 +91,6 @@ function translateUncached(pattern: string, opts: TranslateOptions): Translation
 
 	let source = rendered.source;
 	try {
-		// biome-ignore lint/complexity/useRegexLiterals: the pattern is dynamic.
 		new RegExp(source, flags);
 	} catch (err) {
 		// `v` mode is stricter than `u` about what a class may hold; a pattern
@@ -99,7 +98,6 @@ function translateUncached(pattern: string, opts: TranslateOptions): Translation
 		// round before giving up.
 		const alt = flags.replace(/[uv]$/, flags.endsWith("v") ? "u" : "v");
 		try {
-			// biome-ignore lint/complexity/useRegexLiterals: the pattern is dynamic.
 			new RegExp(source, alt);
 			flags = alt;
 		} catch {

@@ -674,17 +674,12 @@ export class Template {
 		}
 	}
 
-	private range(
-		node: BranchNode,
-		dot: unknown,
-		scope: Scope,
-		emit: Emit,
-	): void {
+	private range(node: BranchNode, dot: unknown, scope: Scope, emit: Emit): void {
 		const value = this.pipeline({ ...node.pipe, vars: [] }, dot, scope);
 
 		const entries: Array<[unknown, unknown]> = [];
 		if (Array.isArray(value)) {
-			value.forEach((v, i) => entries.push([i, v]));
+			for (const [i, v] of value.entries()) entries.push([i, v]);
 		} else if (value instanceof Map) {
 			for (const k of [...value.keys()].sort()) entries.push([k, value.get(k)]);
 		} else if (typeof value === "number") {

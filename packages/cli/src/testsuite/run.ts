@@ -8,7 +8,12 @@
  * reaches real documents at all.
  */
 
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import * as path from "node:path";
+import { Manager } from "@vale-ts/check";
 import {
+	type CLIFlags,
 	checkName,
 	fileExists,
 	findConfigAsset,
@@ -20,13 +25,8 @@ import {
 	readPipeline,
 	styleName,
 	VIEW_DIR,
-	type CLIFlags,
 } from "@vale-ts/core";
-import { Manager } from "@vale-ts/check";
 import { createLinter, type Linter } from "@vale-ts/lint";
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import * as path from "node:path";
 import type { Case } from "./suite.ts";
 import { caseExt } from "./suite.ts";
 
@@ -56,10 +56,7 @@ export function failed(r: Result): boolean {
 }
 
 /** Installs packages into a `StylesPath`, the way `vale sync` does. */
-export type Install = (
-	pkgs: readonly string[],
-	styles: string,
-) => Promise<void>;
+export type Install = (pkgs: readonly string[], styles: string) => Promise<void>;
 
 /** Lints the cases in a configuration. */
 export class Runner {
@@ -152,9 +149,7 @@ export class Runner {
 		}
 
 		if (this.project === null) {
-			this.project = createLinter(
-				Manager.create(readPipeline(this.flags, false)),
-			);
+			this.project = createLinter(Manager.create(readPipeline(this.flags, false)));
 		}
 		return this.project;
 	}
@@ -302,9 +297,7 @@ export function isolatedName(file: string, search: readonly string[]): string {
 		const first = rel.split(path.sep)[0] as string;
 		try {
 			return checkName(path.join(root, first), abs);
-		} catch {
-			continue;
-		}
+		} catch {}
 	}
 
 	const style = path.basename(path.dirname(file));

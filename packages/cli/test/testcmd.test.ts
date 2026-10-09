@@ -7,10 +7,10 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 import { run } from "../src/main.ts";
 import { capture } from "../src/out.ts";
-import { Add, Del, diff, Same } from "../src/testsuite/diff.ts";
-import { loadCases } from "../src/testsuite/suite.ts";
-import { compare } from "../src/testsuite/run.ts";
 import { uncovered } from "../src/testsuite/coverage.ts";
+import { Add, Del, diff, Same } from "../src/testsuite/diff.ts";
+import { compare } from "../src/testsuite/run.ts";
+import { loadCases } from "../src/testsuite/suite.ts";
 import { setTerminal } from "../src/tty.ts";
 import { inTempDir } from "./helpers.ts";
 
@@ -38,11 +38,11 @@ const PROJECT: Record<string, string> = {
 	".vale.ini":
 		"StylesPath = styles\nMinAlertLevel = suggestion\n\n[*.md]\nBasedOnStyles = T\n",
 	"styles/T/Weasel.yml":
-		'extends: existence\nmessage: "\'%s\' is a weasel word!"\nlevel: warning\n' +
+		"extends: existence\nmessage: \"'%s' is a weasel word!\"\nlevel: warning\n" +
 		"tokens:\n  - really\n\ntests:\n" +
 		"  - name: flags a weasel word\n    input: We really need this.\n" +
 		"    want: |\n      1:4:T.Weasel:'really' is a weasel word!\n" +
-		"  - name: never fires\n    input: Plain prose.\n    want: \"\"\n",
+		'  - name: never fires\n    input: Plain prose.\n    want: ""\n',
 };
 
 /** Runs `argv` and returns the code with what it printed. */
@@ -103,9 +103,7 @@ describe("compare", () => {
 			'output does not contain "x"',
 		);
 		expect(compare({ ...base, absent: ["x"] }, "ab")).toBe("");
-		expect(compare({ ...base, absent: ["x"] }, "axb")).toBe(
-			'output contains "x"',
-		);
+		expect(compare({ ...base, absent: ["x"] }, "axb")).toBe('output contains "x"');
 	});
 });
 
@@ -160,7 +158,7 @@ describe("loadCases", () => {
 		await inTempDir((dir) => {
 			write(dir, {
 				"styles/T/Colon.yml":
-					'extends: existence\nmessage: "\'%s\'"\ntokens:\n  - really\n' +
+					"extends: existence\nmessage: \"'%s'\"\ntokens:\n  - really\n" +
 					"tests:\n  - name: never parses\n    input: Note: really\n" +
 					"    contains: T.Colon\n",
 			});
@@ -173,9 +171,7 @@ describe("loadCases", () => {
 	test("a case that asserts nothing is refused", async () => {
 		await inTempDir((dir) => {
 			write(dir, { "T.test.yml": "- name: asserts nothing\n  input: x\n" });
-			expect(() => loadCases(path.join(dir, "T.test.yml"))).toThrow(
-				"needs one of",
-			);
+			expect(() => loadCases(path.join(dir, "T.test.yml"))).toThrow("needs one of");
 		});
 	});
 
@@ -205,18 +201,15 @@ describe("the command", () => {
 		await inTempDir(async (dir) => {
 			write(dir, PROJECT);
 			write(dir, {
-				"styles/T/Weasel.yml":
-					PROJECT["styles/T/Weasel.yml"]!.replace(
-						"'really' is a weasel word!\n  - name: never fires",
-						"nope\n  - name: never fires",
-					),
+				"styles/T/Weasel.yml": PROJECT["styles/T/Weasel.yml"]!.replace(
+					"'really' is a weasel word!\n  - name: never fires",
+					"nope\n  - name: never fires",
+				),
 			});
 
 			const r = await invoke(["--no-global", "test", "styles"]);
 			expect(r.code).toBe(1);
-			expect(r.out).toContain(
-				"✗ flags a weasel word — output does not match",
-			);
+			expect(r.out).toContain("✗ flags a weasel word — output does not match");
 			expect(r.out).toContain("- 1:4:T.Weasel:nope");
 			expect(r.out).toContain("+ 1:4:T.Weasel:'really' is a weasel word!");
 			expect(r.out).toContain("- expected   + actual");
@@ -248,7 +241,7 @@ describe("the command", () => {
 			write(dir, PROJECT);
 			write(dir, {
 				"styles/T/Silent.yml":
-					'extends: existence\nmessage: "\'%s\' is banned."\nlevel: warning\n' +
+					"extends: existence\nmessage: \"'%s' is banned.\"\nlevel: warning\n" +
 					"tokens:\n  - nowhere\n\ntests:\n" +
 					'  - name: never fires\n    input: Plain prose.\n    want: ""\n',
 			});
@@ -264,12 +257,7 @@ describe("the command", () => {
 	test("the JSON report carries every case and the uncovered list", async () => {
 		await inTempDir(async (dir) => {
 			write(dir, PROJECT);
-			const r = await invoke([
-				"--no-global",
-				"--output=JSON",
-				"test",
-				"styles",
-			]);
+			const r = await invoke(["--no-global", "--output=JSON", "test", "styles"]);
 			expect(r.code).toBe(0);
 
 			const parsed = JSON.parse(r.out) as {
@@ -304,8 +292,7 @@ describe("the command", () => {
 			// A rule with no cases is a file `findCases` considers and finds
 			// nothing in, which used to report success.
 			write(dir, {
-				"styles/T/Plain.yml":
-					'extends: existence\nmessage: "x"\ntokens:\n  - x\n',
+				"styles/T/Plain.yml": 'extends: existence\nmessage: "x"\ntokens:\n  - x\n',
 			});
 			const r = await invoke(["--no-global", "--output=line", "test"]);
 			expect(r.code).toBe(2);

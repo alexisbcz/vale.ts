@@ -58,9 +58,7 @@ export interface Captured {
  * The streams are restored even when `body` throws, so one failing case cannot
  * silence the rest of a test file.
  */
-export async function capture(
-	body: () => Promise<void> | void,
-): Promise<Captured> {
+export async function capture(body: () => Promise<void> | void): Promise<Captured> {
 	const prevOut = outWriter;
 	const prevErr = errWriter;
 

@@ -13,6 +13,7 @@ import { Regexp } from "@vale-ts/regex";
 import { isMap, isScalar, isSeq, type Node, parseDocument } from "yaml";
 import { newE201FromPosition, newE201FromTarget, ValeError } from "./errors.ts";
 import { quoteMetaLike } from "./patterns.ts";
+import { fatalYAMLErrors, LENIENT } from "./yaml.ts";
 
 /** The names a YAML vocabulary may have. */
 export const VOCAB_FILES = ["vocab.yml", "vocab.yaml"];
@@ -112,9 +113,10 @@ export function parseVocabYAML(
 	path: string,
 	findAffix?: AffixFinder,
 ): void {
-	const doc = parseDocument(src);
-	if (doc.errors.length > 0) {
-		const first = doc.errors[0]!;
+	const doc = parseDocument(src, LENIENT);
+	const bad = fatalYAMLErrors(doc);
+	if (bad.length > 0) {
+		const first = bad[0]!;
 		throw newE201FromPosition(first.message, path, lineOf(src, first.pos[0]));
 	}
 

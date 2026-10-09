@@ -10,6 +10,8 @@
  * this port: `vale test` is the only thing that reads these files.
  */
 
+import { readFileSync, statSync } from "node:fs";
+import * as path from "node:path";
 import {
 	isTestFile,
 	newE201FromPosition,
@@ -17,8 +19,6 @@ import {
 	walk,
 	YAMLError,
 } from "@vale-ts/core";
-import { readFileSync, statSync } from "node:fs";
-import * as path from "node:path";
 
 /** One document and what linting it must produce. */
 export interface Case {
@@ -115,9 +115,7 @@ function readCase(raw: unknown, file: string, defaultRule: string): Case {
 		format: map.format === undefined ? "" : String(map.format),
 		view: map.view === undefined ? "" : String(map.view),
 		rule:
-			map.rule === undefined || map.rule === null
-				? defaultRule
-				: String(map.rule),
+			map.rule === undefined || map.rule === null ? defaultRule : String(map.rule),
 		want: map.want === undefined || map.want === null ? null : String(map.want),
 		contains: strings(map.contains),
 		absent: strings(map.absent),

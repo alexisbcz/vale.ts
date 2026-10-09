@@ -8,8 +8,11 @@
  * an indexed name so that the order the packages were declared in survives.
  */
 
+import { cpSync, readdirSync, rmSync, statSync } from "node:fs";
+import * as path from "node:path";
 import type { Config } from "@vale-ts/core";
 import {
+	type CLIFlags,
 	CONFIG_DIRS,
 	fileExists,
 	fileNameWithoutExt,
@@ -20,10 +23,7 @@ import {
 	newE100,
 	PIPE_DIR,
 	readPipeline,
-	type CLIFlags,
 } from "@vale-ts/core";
-import { cpSync, readdirSync, rmSync, statSync } from "node:fs";
-import * as path from "node:path";
 import { downloadError, fetchArchive, tempDir } from "./api.ts";
 import { inLibrary } from "./library.ts";
 import { println } from "./out.ts";
@@ -42,9 +42,7 @@ export function initPath(cfg: Config): void {
 		} catch {
 			throw newE100(
 				"sync",
-				new Error(
-					`unable to initialize StylesPath (value = '${stylesPath}')`,
-				),
+				new Error(`unable to initialize StylesPath (value = '${stylesPath}')`),
 			);
 		}
 	}

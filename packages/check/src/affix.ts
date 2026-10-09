@@ -15,6 +15,7 @@ import {
 	joinPath,
 	newE201FromTarget,
 	relToWD,
+	setAffixResolver,
 } from "@vale-ts/core";
 import { quoteMeta } from "@vale-ts/regex";
 import { expand, expandWith } from "@vale-ts/spell";
@@ -56,6 +57,27 @@ export function affixExpander(cfg: Config | null, name: string): ExpandFunc {
 	if (name === "" || name === BUILTIN_AFFIX) return expand;
 	throw new Error(`'${name}.aff' not found in ${DICT_DIR} or $DICPATH`);
 }
+
+/**
+ * Teaches the configuration layer how to expand a vocabulary entry's `flags`.
+ *
+ * `@vale-ts/core` does not depend on the speller, because a vocabulary that
+ * writes `flags:` is the only thing in it that needs one. This package already
+ * does, and every path that can lint loads this one -- a `Manager` is how rules
+ * come to exist -- so the wiring belongs here rather than in each entry point,
+ * where one of them would eventually forget.
+ */
+export function registerSpeller(): void {
+	setAffixResolver((name, affPath) => {
+		if (affPath !== "") return (word, flags) => expandWith(affPath, word, flags);
+		if (name === "" || name === BUILTIN_AFFIX) return expand;
+		throw new Error(`'${name}.aff' not found in ${DICT_DIR} or $DICPATH`);
+	});
+}
+
+// Registered on load: a vocabulary is read while the configuration is, which
+// is before anything has had a chance to call the function above.
+registerSpeller();
 
 /**
  * Expands each `word/FLAGS` word in a rule's tokens into an alternation of the

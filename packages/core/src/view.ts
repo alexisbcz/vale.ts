@@ -15,11 +15,11 @@
  */
 
 import { readFileSync } from "node:fs";
-import { parse as parseYAML } from "yaml";
 import { selectValues } from "./dasel.ts";
 import { fileToValue, newScalarResolver, type ScalarPos } from "./structured.ts";
 import { joinCaptures, parseTemplate, type Template } from "./textfsm.ts";
 import { strLen } from "./util.ts";
+import { parseLenient } from "./yaml.ts";
 
 const VIEW_ENGINES = ["tree-sitter", "dasel", "textfsm"];
 
@@ -366,7 +366,7 @@ export function newView(path: string): View {
 
 /** Reads a view definition from YAML text. */
 export function parseView(data: string): View {
-	const raw = parseYAML(data) as {
+	const raw = parseLenient(data) as {
 		engine?: string;
 		template?: string;
 		scopes?: Array<{ name?: string; expr?: string; type?: string; join?: string }>;

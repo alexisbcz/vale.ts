@@ -93,12 +93,12 @@ export class Key {
 		const runes = [...str];
 		const vals: string[] = [];
 		let buf = "";
-		let escape = false;
+		let escaped = false;
 
 		for (let idx = 0; idx < runes.length; idx++) {
 			const r = runes[idx]!;
-			if (escape) {
-				escape = false;
+			if (escaped) {
+				escaped = false;
 				if (r !== "\\" && !runes.slice(idx).join("").startsWith(delim)) {
 					buf += "\\";
 				}
@@ -106,7 +106,7 @@ export class Key {
 				continue;
 			}
 			if (r === "\\") {
-				escape = true;
+				escaped = true;
 				continue;
 			}
 			if (runes.slice(idx).join("").startsWith(delim)) {

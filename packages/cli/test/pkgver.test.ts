@@ -7,13 +7,13 @@
  */
 
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
+import { sortedReleases, supportsVale } from "../src/pkgver.ts";
 import {
 	compareVersions,
 	parseConstraint,
 	parseVersion,
 	satisfies,
 } from "../src/semver.ts";
-import { sortedReleases, supportsVale } from "../src/pkgver.ts";
 import { setVersion } from "../src/version.ts";
 
 let previous = "";
@@ -141,13 +141,14 @@ describe("sortedReleases", () => {
 			{ version: "0.10.0", url: "" },
 			{ version: "v0.2.0", url: "" },
 		]);
-		expect(got.map((r) => r.version).join(" ")).toBe(
-			"0.10.0 v0.2.0 v0.1.0 draft",
-		);
+		expect(got.map((r) => r.version).join(" ")).toBe("0.10.0 v0.2.0 v0.1.0 draft");
 	});
 
 	test("the input is left alone", () => {
-		const input = [{ version: "1.0.0", url: "" }, { version: "2.0.0", url: "" }];
+		const input = [
+			{ version: "1.0.0", url: "" },
+			{ version: "2.0.0", url: "" },
+		];
 		sortedReleases(input);
 		expect(input[0]?.version).toBe("1.0.0");
 	});

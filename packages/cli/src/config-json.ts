@@ -65,14 +65,10 @@ export function configJSON(cfg: Config): unknown {
 		),
 		SBaseStyles: mapOfSlices(cfg.sBaseStyles),
 		SChecks: map(
-			Object.fromEntries(
-				Object.entries(cfg.sChecks).map(([k, v]) => [k, map(v)]),
-			),
+			Object.fromEntries(Object.entries(cfg.sChecks).map(([k, v]) => [k, map(v)])),
 		),
 		SLevels: map(
-			Object.fromEntries(
-				Object.entries(cfg.sLevels).map(([k, v]) => [k, map(v)]),
-			),
+			Object.fromEntries(Object.entries(cfg.sLevels).map(([k, v]) => [k, map(v)])),
 		),
 		SUnsets: mapOfSlices(cfg.sUnsets),
 		SVocab: mapOfSlices(cfg.sVocab),

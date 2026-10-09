@@ -21,19 +21,15 @@
 import { Manager } from "@vale-ts/check";
 import type { Alert, CLIFlags, Config, File } from "@vale-ts/core";
 import {
-	type ExpandFunc,
-	BUILTIN_AFFIX,
 	fromString as configFromString,
 	newConfig,
 	newFlags,
 	readPipeline,
-	setAffixResolver,
 } from "@vale-ts/core";
 import { createLinter, initCode, type Linter } from "@vale-ts/lint";
-import { expand, expandWith } from "@vale-ts/spell";
 
-export type * from "@vale-ts/core";
 export { Manager } from "@vale-ts/check";
+export type * from "@vale-ts/core";
 export {
 	ALERT_LEVELS,
 	Block,
@@ -45,27 +41,6 @@ export {
 	ValeError,
 } from "@vale-ts/core";
 export { createLinter, DocumentErrors, Linter } from "@vale-ts/lint";
-
-/**
- * Teaches the configuration layer how to expand a vocabulary term's affix
- * flags.
- *
- * `@vale-ts/core` does not depend on the speller, because a vocabulary that
- * writes `flags:` is the only thing that needs one. Importing this package
- * wires the two together; importing `@vale-ts/core` alone leaves a clear error
- * if a vocabulary asks.
- */
-setAffixResolver((name: string, affPath: string): ExpandFunc => {
-	if (affPath !== "") {
-		return (word, flags) => expandWith(affPath, word, flags);
-	}
-	if (name === "" || name === BUILTIN_AFFIX) {
-		return (word, flags) => expand(word, flags);
-	}
-	throw new Error(
-		`'${name}.aff' not found in config/dictionaries or $DICPATH`,
-	);
-});
 
 /** How a string is linted when it is not a file on disk. */
 export interface LintStringOptions {

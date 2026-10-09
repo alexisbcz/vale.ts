@@ -10,6 +10,9 @@
  * `dc` is its hidden alias.
  */
 
+import { readFileSync, rmSync } from "node:fs";
+import * as path from "node:path";
+import { Manager, parseAlert } from "@vale-ts/check";
 import type { CLIFlags, Config } from "@vale-ts/core";
 import {
 	CONFIG_VARS,
@@ -20,30 +23,27 @@ import {
 	mockLoad,
 	newConfig,
 	newE100,
-	newFlags,
 	newFile,
+	newFlags,
 	readPipeline,
 } from "@vale-ts/core";
-import { Manager, parseAlert } from "@vale-ts/check";
 import { createLinter } from "@vale-ts/lint";
-import { readFileSync, rmSync } from "node:fs";
-import * as path from "node:path";
+import { fetchArchive } from "./api.ts";
 import { applyFixes } from "./apply.ts";
 import { configJSON } from "./config-json.ts";
 import { printJSONAlerts } from "./json.ts";
-import { installNativeHost, execName, nativeConfig, uninstallNativeHost } from "./native.ts";
+import {
+	execName,
+	installNativeHost,
+	nativeConfig,
+	uninstallNativeHost,
+} from "./native.ts";
 import { println, stdout } from "./out.ts";
 import { syncCommand } from "./sync.ts";
-import { runTests } from "./test.ts";
-import {
-	code,
-	foundMark,
-	missingMark,
-	renderTable,
-} from "./term.ts";
-import { getJSON, printJSON, sendResponse } from "./util.ts";
-import { fetchArchive } from "./api.ts";
 import { textToContext } from "./tag.ts";
+import { code, foundMark, missingMark, renderTable } from "./term.ts";
+import { runTests } from "./test.ts";
+import { getJSON, printJSON, sendResponse } from "./util.ts";
 
 /** One subcommand. */
 export interface Command {
@@ -104,8 +104,7 @@ export const COMMANDS: Record<string, Command> = {
 		run: printVars,
 		summary: "Print the supported environment variables to stdout.",
 		usage: "ls-vars",
-		detail:
-			"Lists every variable Vale reads, what it does, and its current value.",
+		detail: "Lists every variable Vale reads, what it does, and its current value.",
 	},
 	sync: {
 		run: syncCommand,

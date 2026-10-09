@@ -15,10 +15,10 @@
  * bound exists to prevent.
  */
 
-import { unzipSync } from "fflate";
 import { readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
 import { mkdir } from "@vale-ts/core";
+import { unzipSync } from "fflate";
 
 /**
  * What a single archived file may expand to.

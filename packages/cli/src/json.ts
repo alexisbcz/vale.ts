@@ -6,10 +6,10 @@
  * naming. An editor plugin reads these bytes, so they are the interface.
  */
 
-import type { Alert, File } from "@vale-ts/core";
 import type { Manager } from "@vale-ts/check";
-import { asMap, getJSON } from "./util.ts";
+import type { Alert, File } from "@vale-ts/core";
 import { println } from "./out.ts";
+import { asMap, getJSON } from "./util.ts";
 
 /** One alert, with Go's field names and order. */
 export function alertJSON(a: Alert): Record<string, unknown> {

@@ -6,9 +6,9 @@
  */
 
 import { describe, expect, test } from "bun:test";
-import { zipSync } from "fflate";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
+import { zipSync } from "fflate";
 import {
 	destinationFor,
 	MAX_UNARCHIVED_FILE,
