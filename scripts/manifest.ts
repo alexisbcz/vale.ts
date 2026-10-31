@@ -76,7 +76,8 @@ const DEP_FIELDS = [
 
 /**
  * Runs `body` with the manifest's `workspace:` specifiers replaced by the
- * ranges a consumer can resolve, and puts the manifest back afterwards.
+ * ranges a consumer can resolve and its `publishConfig` applied, and puts the
+ * manifest back afterwards.
  *
  * The file is restored byte for byte, including its formatting, because it is
  * a tracked file and a release should not show up as a diff.
@@ -88,6 +89,20 @@ export function withPublishableManifest<T>(dir: string, body: () => T): T {
 	const m = JSON.parse(original) as Manifest & Record<string, unknown>;
 
 	let changed = false;
+
+	// The tree points at `src` so the repository runs without a build. npm only
+	// honours `publishConfig` at publish time, so a tarball installed any other
+	// way would hand its consumers raw TypeScript. Apply it here instead.
+	const publish = m.publishConfig as Record<string, unknown> | undefined;
+	if (publish) {
+		for (const field of ["main", "types", "exports", "bin"]) {
+			if (publish[field] !== undefined) {
+				m[field] = publish[field];
+				changed = true;
+			}
+		}
+	}
+
 	for (const field of DEP_FIELDS) {
 		const deps = m[field];
 		if (deps === undefined) continue;
