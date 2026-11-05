@@ -3,6 +3,25 @@
 	"version": "0.1.0",
 	"description": "The readers that turn a document into the blocks Vale's rules run against.",
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts/tree/main/packages/lint",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/lint"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
+	"keywords": [
+		"vale",
+		"prose",
+		"linter",
+		"markdown",
+		"html",
+		"asciidoc",
+		"rst"
+	],
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -16,7 +35,8 @@
 	"files": [
 		"src",
 		"dist",
-		"data"
+		"data",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"dependencies": {
 		"@vale-ts/check": "workspace:*",

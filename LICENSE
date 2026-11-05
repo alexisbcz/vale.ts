@@ -2,12 +2,6 @@ MIT License
 
 Copyright (c) 2026 vale.ts contributors
 
-This project is a TypeScript port of Vale (https://vale.sh), Copyright (c) 2017
-Joseph Kato and the Vale contributors, which is MIT-licensed. Portions of this
-software are derived from that work, and from the MIT-licensed projects Vale
-itself builds on: prose (Joseph Kato), gospell (Nick Galbreath) and sentences
-(Eric Bower). Their notices are kept beside the files derived from them.
-
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights

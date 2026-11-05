@@ -3,6 +3,23 @@
 	"version": "0.1.0",
 	"description": "Tokenizers, a Punkt sentence segmenter, an averaged-perceptron POS tagger and readability metrics.",
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts/tree/main/packages/nlp",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/nlp"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
+	"keywords": [
+		"nlp",
+		"tokenizer",
+		"sentence-segmentation",
+		"pos-tagger",
+		"readability"
+	],
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -15,7 +32,8 @@
 	},
 	"files": [
 		"src",
-		"dist"
+		"dist",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"dependencies": {
 		"@vale-ts/models": "workspace:*"

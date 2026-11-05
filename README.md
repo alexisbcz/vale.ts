@@ -242,6 +242,14 @@ most of the reasoning in the comments are theirs.
 The trained models in `@vale-ts/models` are shipped byte for byte from
 [`prose`](https://github.com/jdkato/prose) and
 [`neurosnap/sentences`](https://github.com/neurosnap/sentences), both MIT.
-`@vale-ts/spell` is a port of [`gospell`](https://github.com/jdkato/gospell).
+`@vale-ts/spell` is a port of [`gospell`](https://github.com/jdkato/gospell),
+and its built-in dictionary is Vale's, generated from
+[SCOWL](http://wordlist.aspell.net/).
 
-This port is MIT-licensed; see [LICENSE](LICENSE).
+This port is MIT-licensed; see [LICENSE](LICENSE). The upstream notices it
+carries are collected in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), and
+every published package includes both files.
+
+vale.ts is an independent project, not affiliated with or endorsed by Vale or
+its maintainers. Bugs in this port belong
+[here](https://github.com/alexisbcz/vale.ts/issues), not upstream.

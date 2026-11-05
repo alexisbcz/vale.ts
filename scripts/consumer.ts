@@ -17,7 +17,7 @@ import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, readdirSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
-import { ROOT } from "./manifest.ts";
+import { NOTICES, ROOT } from "./manifest.ts";
 
 const ARTIFACTS = path.join(ROOT, ".artifacts");
 
@@ -28,6 +28,29 @@ const tarballs = readdirSync(ARTIFACTS)
 if (tarballs.length === 0) {
 	console.error("no tarballs in .artifacts/ -- run `bun run pack` first");
 	process.exit(1);
+}
+
+// Two things a consumer can install without noticing they are missing: the
+// licence notices, which the MIT terms require in every copy, and the
+// `repository` field, without which `npm publish --provenance` is refused.
+for (const tarball of tarballs) {
+	const listing = spawnSync("tar", ["-tzf", tarball], { encoding: "utf8" });
+	const entries = new Set((listing.stdout ?? "").split(/\r?\n/));
+	const manifest = spawnSync("tar", ["-xzOf", tarball, "package/package.json"], {
+		encoding: "utf8",
+	});
+	const missing = [
+		...NOTICES.filter((n) => !entries.has(`package/${n}`)),
+		...(JSON.parse(manifest.stdout || "{}").repository
+			? []
+			: ["a repository field"]),
+	];
+	if (listing.status !== 0 || manifest.status !== 0 || missing.length > 0) {
+		console.error(
+			`${path.basename(tarball)} lacks ${missing.join(", ") || "a readable listing"}`,
+		);
+		process.exit(1);
+	}
 }
 
 const dir = mkdtempSync(path.join(tmpdir(), "vale-ts-consumer-"));

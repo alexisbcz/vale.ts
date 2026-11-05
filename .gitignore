@@ -6,3 +6,7 @@ tests/compat/.out/
 coverage/
 tests/compat/.cache/
 .artifacts/
+
+# Copied in from the root while a package is packed.
+packages/*/LICENSE
+packages/*/THIRD_PARTY_NOTICES.md
