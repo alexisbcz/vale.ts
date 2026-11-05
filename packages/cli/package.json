@@ -3,6 +3,25 @@
 	"version": "0.1.0",
 	"description": "The vale-ts command-line interface.",
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts/tree/main/packages/cli",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/cli"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
+	"keywords": [
+		"vale",
+		"prose",
+		"linter",
+		"cli",
+		"writing",
+		"markdown",
+		"docs"
+	],
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -19,7 +38,8 @@
 	"files": [
 		"src",
 		"dist",
-		"data"
+		"data",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"dependencies": {
 		"@vale-ts/check": "workspace:*",

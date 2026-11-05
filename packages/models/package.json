@@ -3,6 +3,22 @@
 	"version": "0.1.0",
 	"description": "The trained models Vale's NLP depends on: the English POS model and the Punkt sentence model.",
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts/tree/main/packages/models",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/models"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
+	"keywords": [
+		"vale",
+		"nlp",
+		"pos-tagger",
+		"punkt"
+	],
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -16,7 +32,8 @@
 	"files": [
 		"src",
 		"dist",
-		"data"
+		"data",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"publishConfig": {
 		"main": "./dist/index.js",

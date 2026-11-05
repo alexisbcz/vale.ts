@@ -12,6 +12,16 @@
 		"docs"
 	],
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts#readme",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/vale"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -34,7 +44,8 @@
 	},
 	"files": [
 		"src",
-		"dist"
+		"dist",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"dependencies": {
 		"@vale-ts/check": "workspace:*",

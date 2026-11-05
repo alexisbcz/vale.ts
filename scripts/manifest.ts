@@ -10,7 +10,14 @@
  * sibling's published shape is the one that was built beside it.
  */
 
-import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+	copyFileSync,
+	existsSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
 import * as path from "node:path";
 
 export const ROOT = path.resolve(
@@ -76,8 +83,8 @@ const DEP_FIELDS = [
 
 /**
  * Runs `body` with the manifest's `workspace:` specifiers replaced by the
- * ranges a consumer can resolve and its `publishConfig` applied, and puts the
- * manifest back afterwards.
+ * ranges a consumer can resolve, its `publishConfig` applied and the licence
+ * notices copied in, and puts the package back afterwards.
  *
  * The file is restored byte for byte, including its formatting, because it is
  * a tracked file and a release should not show up as a diff.
@@ -122,12 +129,26 @@ export function withPublishableManifest<T>(dir: string, body: () => T): T {
 		}
 	}
 
-	if (!changed) return body();
+	// The MIT licence asks that its notice travel with every copy, and a
+	// tarball is a copy. The notices live once, at the root; each package gets
+	// them for as long as it is being packed, and only the files put there are
+	// taken away again.
+	const copied: string[] = [];
+	for (const name of NOTICES) {
+		const to = path.join(dir, name);
+		if (existsSync(to)) continue;
+		copyFileSync(path.join(ROOT, name), to);
+		copied.push(to);
+	}
 
-	writeFileSync(file, `${JSON.stringify(m, null, "\t")}\n`);
+	if (changed) writeFileSync(file, `${JSON.stringify(m, null, "\t")}\n`);
 	try {
 		return body();
 	} finally {
-		writeFileSync(file, original);
+		if (changed) writeFileSync(file, original);
+		for (const to of copied) rmSync(to);
 	}
 }
+
+/** The root files every published package carries a copy of. */
+export const NOTICES = ["LICENSE", "THIRD_PARTY_NOTICES.md"];

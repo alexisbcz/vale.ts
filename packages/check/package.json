@@ -3,6 +3,22 @@
 	"version": "0.1.0",
 	"description": "Vale's rule types -- existence, substitution, occurrence, and the rest -- and the scope selectors they run in.",
 	"license": "MIT",
+	"author": "Alexis Bouchez",
+	"homepage": "https://github.com/alexisbcz/vale.ts/tree/main/packages/check",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/alexisbcz/vale.ts.git",
+		"directory": "packages/check"
+	},
+	"bugs": {
+		"url": "https://github.com/alexisbcz/vale.ts/issues"
+	},
+	"keywords": [
+		"vale",
+		"prose",
+		"linter",
+		"rules"
+	],
 	"type": "module",
 	"main": "./src/index.ts",
 	"types": "./src/index.ts",
@@ -16,7 +32,8 @@
 	"files": [
 		"src",
 		"dist",
-		"data"
+		"data",
+		"THIRD_PARTY_NOTICES.md"
 	],
 	"dependencies": {
 		"@vale-ts/core": "workspace:*",
